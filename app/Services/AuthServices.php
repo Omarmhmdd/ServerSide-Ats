@@ -12,6 +12,8 @@ class AuthServices
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
+            'phone' => $request->phone,
+            'role_id' => $request->role_id
         ]);
     }
 }

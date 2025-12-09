@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class CandidateImportForm extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,8 +22,9 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'file' => 'required|mimes:xlsx,xls,csv',
+            'recruiter_id' => 'required|integer',
+            'job_role_id' => 'required|integer'
         ];
     }
 }
