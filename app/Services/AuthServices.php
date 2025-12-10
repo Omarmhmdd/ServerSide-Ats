@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\User;
-use Hash;
-
+use Illuminate\Support\Facades\Hash;
+use App\Models\UserRole;
 class AuthServices
 {
     public static function createUser($request){
@@ -12,8 +12,8 @@ class AuthServices
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'phone' => $request->phone,
-            'role_id' => $request->role_id
+            'phone'    => $request->phone,
+            'role_id'  => $request->role_id,
         ]);
-    }
+}
 }

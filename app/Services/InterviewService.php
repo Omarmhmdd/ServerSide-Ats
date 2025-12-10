@@ -8,10 +8,10 @@ use App\Models\JobRoles;
 use App\Models\Pipeline;
 use Carbon\Carbon;
 use Http;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class InterviewService
-{
-
+class InterviewService {
     public static function scheduleInterviews($list_of_emails){
         // first get the user's job_role_id and recruiter_id
         $required_ids = self::getRequiredIds($list_of_emails);
@@ -23,7 +23,6 @@ class InterviewService
 
         return true;
     }
-
     private static function getRequiredIds($list_of_emails){
         $first_email = reset($list_of_emails);
         $required_ids = Candidate::where('email' , $first_email)
@@ -116,5 +115,79 @@ class InterviewService
 
         return $list_of_new_interviews;
     }
+    public static function getAllInterviews(): Collection{
+        return Interview::with(['interviewer', 'jobRole', 'candidate'])
+            ->latest()
+            ->get();
+    }
+    public static function getInterviewById(int $id): Interview{
+        $interview = Interview::with(['interviewer', 'jobRole', 'candidate'])
+            ->find($id);
 
+        if (!$interview) {
+            throw new ModelNotFoundException('Interview not found');
+        }
+
+        return $interview;
+    }
+    public static function createInterview(array $data): Interview{
+        $interview = Interview::create($data);
+        $interview->load(['interviewer', 'jobRole', 'candidate']);
+        
+        return $interview;
+    }
+    public static function updateInterview(int $id, array $data): Interview{
+        $interview = Interview::find($id);
+
+        if (!$interview) {
+            throw new ModelNotFoundException('Interview not found');
+        }
+
+        $interview->update($data);
+        $interview->load(['interviewer', 'jobRole', 'candidate']);
+
+        return $interview;
+    }
+    public static function deleteInterview(int $id): bool{
+        $interview = Interview::find($id);
+
+        if (!$interview) {
+            throw new ModelNotFoundException('Interview not found');
+        }
+
+        return $interview->delete();
+    }
+    public static function getInterviewsByCandidate(int $candidateId): Collection{
+        return Interview::with(['interviewer', 'jobRole', 'candidate'])
+            ->where('candidate_id', $candidateId)
+            ->latest()
+            ->get();
+    }
+    public static function getInterviewsByInterviewer(int $interviewerId): Collection{
+        return Interview::with(['interviewer', 'jobRole', 'candidate'])
+            ->where('intreveiwer_id', $interviewerId)
+            ->latest()
+            ->get();
+    }
+    public static function updateInterviewStatus(int $id, string $status): Interview{
+        $validStatuses = ['no show', 'completed', 'canceled', 'posptponed', 'pending'];
+        
+        if (!in_array($status, $validStatuses)) {
+            throw new \InvalidArgumentException('Invalid status provided');
+        }
+
+        $interview = Interview::find($id);
+
+        if (!$interview) {
+            throw new ModelNotFoundException('Interview not found');
+        }
+
+        $interview->update(['status' => $status]);
+        $interview->load(['interviewer', 'jobRole', 'candidate']);
+
+        return $interview;
+    }
 }
+
+
+

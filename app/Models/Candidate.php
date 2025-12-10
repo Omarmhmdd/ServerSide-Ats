@@ -30,3 +30,4 @@ class Candidate extends Model
     ];
 
 }
+
