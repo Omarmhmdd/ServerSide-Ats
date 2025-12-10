@@ -1,32 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CandidateController;
+use App\Http\Controllers\CandidateImportController;
 use App\Http\Controllers\InterviewController;
+use Illuminate\Support\Facades\Route;
+// use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\StageController;
-
-  /*Route::group(["prefix" => "v0.1"]  , function(){
-
-    // UNPROTECTED ROUTES
-    Route::post("/login" , [AuthController::class , "login"]);
-    Route::post("/signup" , [AuthController::class , "signup"]);
-
-
-    // AUTHINTICATABLES
-    Route::group(["prefix"=>"auth" , "middleware" => "auth:api"] , function(){
-
-        // Recruiter
-        // Candidates
-        // JOB ROLES
-        // PIPELINE
-        // N8N
-        // CANDIDATES
-        // OFFERS
-        // INTERVIEW    
-    });
-    
-});*/
 
 Route::group(["prefix" => "v0.1"], function () {
 
@@ -36,6 +17,11 @@ Route::group(["prefix" => "v0.1"], function () {
 
     // AUTHENTICATED ROUTES
     Route::group(["prefix" => "auth", "middleware" => "auth:api"], function () {
+
+        // CANDIDATES
+        Route::group(["prefix" => "candidate"] , function(){
+            Route::post("/import" , [CandidateImportController::class , "import"]);
+        });
 
         // INTERVIEW ROUTES
         // All authenticated users can access interviews
@@ -76,7 +62,7 @@ Route::group(["prefix" => "v0.1"], function () {
               
             
             // Per-role stage routes
-       //     Route::get("/job-role/{jobRoleId}", [StageController::class, "getStagesForJobRole"]);
+    //     Route::get("/job-role/{jobRoleId}", [StageController::class, "getStagesForJobRole"]);
          //   Route::post("/job-role/{jobRoleId}/assign", [StageController::class, "assignStagesToJobRole"])->middleware("role:admin,recruiter");
            // Route::post("/job-role/{jobRoleId}/order", [StageController::class, "updateStageOrderForJobRole"])->middleware("role:admin,recruiter");
         });
@@ -87,5 +73,12 @@ Route::group(["prefix" => "v0.1"], function () {
         // JOB ROLES routes
         // OFFERS routes
         // N8N webhook routes
+    });
+
+    // N8N
+    Route::group(["prefix" => "n8n"] , function(){
+        Route::get("/candidatesData" , [CandidateController::class , 'getCandidateData']);
+        Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
+        Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
     });
 });

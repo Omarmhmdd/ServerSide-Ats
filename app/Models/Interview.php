@@ -8,7 +8,7 @@ class Interview extends Model
 {
      protected $table = 'intreviews';
     protected $fillable = [
-        'intreveiwer_id',
+        'interveiwer_id',
         'job_role_id',
         'candidate_id',
         'type',

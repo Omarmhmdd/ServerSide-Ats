@@ -31,9 +31,6 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Store a newly created pipeline entry.
-     */
     public function store(StorePipelineRequest $request): JsonResponse
     {
         try {
