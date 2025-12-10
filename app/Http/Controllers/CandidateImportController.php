@@ -4,12 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CandidateImportForm;
 use App\Services\CandidateImportService;
+use Auth;
 use Exception;
 
 class CandidateImportController extends Controller
 {
+    protected int $user_id;
+
+    public function __construct(){
+        $this->user_id = Auth::id();
+    }
+
+
     public function import(CandidateImportForm $request){
         try{
+            $request[] = $this->user_id;
             $errors = CandidateImportService::import($request->validated());
 
             if(count($errors) > 0){

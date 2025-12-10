@@ -2,11 +2,22 @@
 
 namespace App\Services;
 
+use App\Services\BuildCandidateMetaDataService;
 use App\Models\Candidate;
+use Exception;
 
-class CandidateService
-{
-    public static function saveMetaData($metaDataForm){
+class CandidateService{
+    public static function saveMetaData(array $allMetaData){
+
+        if(!$allMetaData || count($allMetaData) === 0){
+            throw new Exception("Failed to extract user data, please make sure to enter valid urls");
+        }
+
+        $tablesInsertion = BuildCandidateMetaDataService::buildInsertStrings($allMetaData);
+        foreach($tablesInsertion as $table => $data){
+            BuildCandidateMetaDataService::bulkInsert($table , $data);
+        }
+        return true;
     }
 
     public static function getCandidateData(){
@@ -20,6 +31,4 @@ class CandidateService
         ])
         ->get();
     }
-
-
 }
