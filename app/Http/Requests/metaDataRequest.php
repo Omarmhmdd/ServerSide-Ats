@@ -101,6 +101,7 @@ class metaDataRequest extends FormRequest
             '*.2.personal_info.github_url' => 'nullable|url',
             '*.2.personal_info.portfolio_url' => 'nullable|url',
             '*.2.summary' => 'nullable|string',
+            
             '*.2.work_experience' => 'nullable|array',
             '*.2.work_experience.*.title' => 'nullable|string',
             '*.2.work_experience.*.company' => 'nullable|string',

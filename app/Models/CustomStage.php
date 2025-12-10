@@ -4,24 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Interview extends Model
+class CustomStage extends Model
 {
     protected $fillable = [
-        'interveiwer_id',
         'job_role_id',
-        'candidate_id',
-        'type',
-        'schedule',
-        'duration',
-        'meeting_link',
-        'rubric',
-        'notes',
-        'status',
+        'name',
+        'order',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
 }

@@ -21,6 +21,7 @@ class Candidate extends Model
         'phone',
         'attachments',
         'processed',
+        'email'
     ];
 
     protected $casts = [

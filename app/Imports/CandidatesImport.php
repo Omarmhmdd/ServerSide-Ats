@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Candidate;
 use App\Models\MetaData;
+use App\Models\Pipeline;
 use Http;
 use Log;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
@@ -40,7 +41,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
     }
     public function model(array $row){
         try{
-            return Candidate::create([
+            $new_candidate =  new Candidate([
                 'first_name'    => $row['first_name'] ?? null,
                 'last_name'     => $row['last_name'] ?? null,
                 'portfolio'     => $row['portfolio'] ?? null,
@@ -54,8 +55,14 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
                 'recruiter_id'  => (int)$this->recruiterId,
                 'job_role_id'   => (int)$this->jobRoleId,
                 'meta_data_id' => 1,// for now
-            ]);     
+            ]);   
 
+            $new_candidate->save();
+
+
+           // create new pipeline here
+
+            return $new_candidate;
         }catch(Throwable $e){
             $this->onError($e);
             return null; // skip this row and keep going

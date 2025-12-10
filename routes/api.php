@@ -26,6 +26,7 @@ Route::group(["prefix" => "v0.1"]  , function(){
     Route::group(["prefix" => "n8n"] , function(){
         Route::get("/candidatesData" , [CandidateController::class , 'getCandidateData']);
         Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
+        Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
     });
 
     

@@ -17,7 +17,19 @@ class CandidateService{
         foreach($tablesInsertion as $table => $data){
             BuildCandidateMetaDataService::bulkInsert($table , $data);
         }
-        return true;
+
+        self::scheduleScreening($allMetaData);
+    }
+
+    private static function scheduleScreening($allMetaData){
+        $listOfEmails = [];
+        foreach($allMetaData as $candidate_id =>$meta){
+            $candidate_email = Candidate::where('id' , $candidate_id)->select('email')->first();
+            $listOfEmails = [
+                $candidate_id => $candidate_email
+            ];
+        }
+        InterviewService::scheduleInterviews($listOfEmails);
     }
 
     public static function getCandidateData(){
