@@ -56,4 +56,42 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
         ];
     }
+     public function role()
+    {
+        return $this->belongsTo(UserRole::class, 'role_id');
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role && strtolower($this->role->name) === strtolower($roleName);
+    }
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    /**
+     * Check if user is recruiter
+     */
+    public function isRecruiter(): bool
+    {
+        return $this->hasRole('recruiter');
+    }
+
+    /**
+     * Check if user is interviewer
+     */
+    public function isInterviewer(): bool
+    {
+        return $this->hasRole('interviewer');
+    }
 }
+
+

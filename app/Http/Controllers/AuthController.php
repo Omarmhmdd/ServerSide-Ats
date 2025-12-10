@@ -14,7 +14,7 @@ class AuthController extends Controller{
         if (! $token = auth()->attempt($request->validated())) {
             return $this->errorResponse("Invalid credentials");
         }
-
+             
         return $this->successResponse(["token" => $token , "user" => auth()->user()]);
     }
 
