@@ -3,8 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-
-class LoginRequest extends FormRequest
+use Illuminate\Validation\Rule;
+class UpdateStageRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,9 +21,14 @@ class LoginRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+         return [
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('stages', 'name')->ignore($this->route('stage')),
+            ],
+            
         ];
     }
 }

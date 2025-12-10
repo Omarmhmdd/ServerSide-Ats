@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Stage extends Model
 {
     protected $fillable = [
-        'name'
+        'name',
+        
     ];
 
     // Casts
@@ -15,5 +16,10 @@ class Stage extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+     public function pipelines()
+    {
+        return $this->hasMany(Pipeline::class, 'stage_id');
+    }
+   
 
 }

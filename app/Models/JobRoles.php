@@ -27,5 +27,10 @@ class JobRoles extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+   
+/**
+ * Get job role stages pivot entries
+ */
+
 
 }
