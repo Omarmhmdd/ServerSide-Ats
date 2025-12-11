@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends Controller{
      public function login(LoginRequest $request){
 
-        if (!$token = Auth::guard('api')->attempt($request->validated())) {
+        if (! $token = Auth::guard('api')->attempt($request->validated())) {
             return $this->errorResponse("Invalid credentials");
         }
 
@@ -25,7 +25,7 @@ class AuthController extends Controller{
 
             return $this->successResponse(["token" => $token]);
         }catch(Exception $ex){
-            return $this->errorResponse("Failed to signup");
+            return $this->errorResponse("Failed to signup", 500 , ["1" => $ex->getMessage()]);
         }
     }
 }

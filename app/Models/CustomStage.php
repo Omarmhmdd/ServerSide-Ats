@@ -4,18 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MetaData extends Model
+class CustomStage extends Model
 {
     protected $fillable = [
-        'candidate_id',
-        'parsed_CV_text',
-        'git_hub_repos_json',
-        'skills_detected',
+        'job_role_id',
+        'name',
+        'order',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-
 }

@@ -3,8 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-
-class RegisterRequest extends FormRequest
+use Illuminate\Validation\Rule;
+class UpdateStageRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,12 +21,14 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'phone' => 'required|integer',
-            'role_id' => 'required|integer'
+         return [
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('stages', 'name')->ignore($this->route('stage')),
+            ],
+            
         ];
     }
 }

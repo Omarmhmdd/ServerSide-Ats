@@ -20,6 +20,8 @@ class Candidate extends Model
         'notes',
         'phone',
         'attachments',
+        'processed',
+        'email'
     ];
 
     protected $casts = [
@@ -28,3 +30,4 @@ class Candidate extends Model
     ];
 
 }
+
