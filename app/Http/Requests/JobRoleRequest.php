@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class JobRoleRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -22,8 +22,14 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => 'required|email',
-            'password' => 'required|string|min:6',
+            'recruiter_id'     => 'required|int|',
+            'level_id'     => 'required|int|',
+            'hiring_manager_id'     => 'required|int|',
+            'location'    => 'required|string|',
+            'title' => 'required|string|',
+            'description' => 'required|string|',
+            'is_remote' => 'nullable|boolean|',
+            'is_on_site' => 'nullable|boolean|',
         ];
     }
 }

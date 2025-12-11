@@ -6,16 +6,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 
-class JobSkills extends Model
+class JobRole extends Model
 {
-       /** @use HasFactory<\Database\Factories\UserFactory> */
+     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
 
     protected $fillable = [
-        'role_id',
-        'name',
-        'nice_to_have'
+        'recruiter_id',
+        'level_id',
+        'hiring_manager_id',
+        'location',
+        'title',
+        'description',
+        'is_remote',
+        'is_on_site',
     ];
 
     protected $casts = [
