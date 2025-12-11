@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CustomStage;
 use App\Models\JobRole;
 use App\Models\JobSkill;
 use App\Models\Level;
@@ -71,7 +72,7 @@ class JobRoleServices
 
             self::saveSkills($role->id, $request->input('skills', []));
 
-            //self::saveStages($role->id, $request->input('stages', []));
+            self::saveStages($role->id, $request->input('stages', []));
 
             return $role;
         });
@@ -97,40 +98,41 @@ class JobRoleServices
         throw new \Exception("Error Saving Role.");
     }
 
-    private static function saveSkills($role_id, $skillsArray)
+    private static function saveSkills($job_role_id, $skillsArray)
     {
-        JobSkill::where('role_id', $role_id)->delete();
+        JobSkill::where('job_role_id', $job_role_id)->delete();
 
         if (!empty($skillsArray)) {
             foreach ($skillsArray as $skillData) {
                 $skill = new JobSkill();
                 $skill->fill([
-                    'role_id' => $role_id,
+                    'job_role_id' => $job_role_id,
                     'name' => $skillData['name'],
-                    'nice_to_have' => $skillData['is_nice_to_have']
+                    'nice_to_have' => $skillData['nice_to_have']
                 ]);
                 $skill->save();
             }
         }
     }
 
-    /*private static function saveStages($role_id, $stagesArray)
+    private static function saveStages($job_role_id, $stagesArray)
     {
-        Stage::where('job_role_id', $role_id)->delete();
+        CustomStage::where('job_role_id', $job_role_id)->delete();
 
         if (!empty($stagesArray)) {
-            foreach ($stagesArray as $stageName) {
-                $stage = new Stage();
+            foreach ($stagesArray as $index => $stage_name) {
+                $stage = new CustomStage();
 
                 $stage->fill([
-                    'job_role_id' => $role_id,
-                    'name' => $stageName
+                    'job_role_id' => $job_role_id,
+                    'name' => $stage_name,
+                    'order' => $index
                 ]);
 
                 $stage->save();
             }
         }
-    }*/
+    }
 
     static function deleteJobRole($id){
         $role = JobRole::findOrFail($id);
