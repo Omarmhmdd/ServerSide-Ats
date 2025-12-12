@@ -18,8 +18,13 @@ class CandidateImportController extends Controller
 
     public function import(CandidateImportForm $request){
         try{
-            $request[] = $this->user_id;
-            $errors = CandidateImportService::import($request->validated());
+            $form = [
+                "file" => $request->file('file'),
+                "recruiter_id" => $this->user_id,
+                "job_role_id" => $request->validated()["job_role_id"]
+            ];
+
+            $errors = CandidateImportService::import($form);
 
             if(count($errors) > 0){
                 return $this->successResponse([

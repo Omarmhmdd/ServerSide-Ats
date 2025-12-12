@@ -3,9 +3,9 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\CandidateImportController;
+use App\Http\Controllers\GithubController;
 use App\Http\Controllers\InterviewController;
 use Illuminate\Support\Facades\Route;
-// use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\StageController;
 
@@ -67,7 +67,7 @@ Route::group(["prefix" => "v0.1"], function () {
            // Route::post("/job-role/{jobRoleId}/order", [StageController::class, "updateStageOrderForJobRole"])->middleware("role:admin,recruiter");
         });
 
-        // TODO: Add routes for other modules
+        // TODO:  Add routes for other modules
         // Recruiter routes
         // Candidates routes
         // JOB ROLES routes
@@ -80,5 +80,6 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::get("/candidatesData" , [CandidateController::class , 'getCandidateData']);
         Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
         Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
+        Route::get('/github/{username}' , [GithubController::class , 'analyze']);
     });
 });

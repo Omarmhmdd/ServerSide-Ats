@@ -27,7 +27,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
     use SkipsErrors;// error collection instead of distrubpting code flow
 
     protected int $recruiterId;
-    protected int $jobRoleId;
+    protected $jobRoleId;
 
     
     public function __construct($recruiterId, $jobRoleId){
@@ -44,17 +44,17 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
             $new_candidate =  new Candidate([
                 'first_name'    => $row['first_name'] ?? null,
                 'last_name'     => $row['last_name'] ?? null,
+                'email'         => $row['email'] ?? null,
                 'portfolio'     => $row['portfolio'] ?? null,
                 'linkedin_url'  => $row['linkedin_url'] ?? null,
-                'github_url'    => $row['github_url'] ?? null,
+                'github_username'    => $row['github_username'] ?? null,
                 'source'        => $row['source'] ?? null,
                 'location'      => $row['location'] ?? null,
                 'notes'         => $row['notes'] ?? null,
                 'phone'         => $row['phone'] ?? null,
                 'attachments' => $row["cv"] ?? null,
-                'recruiter_id'  => (int)$this->recruiterId,
+                'recruiter_id'  => $this->recruiterId,
                 'job_role_id'   => (int)$this->jobRoleId,
-                'meta_data_id' => 1,// for now
             ]);   
 
             $new_candidate->save();

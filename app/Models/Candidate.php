@@ -12,7 +12,7 @@ class Candidate extends Model
         'meta_data_id',
         'portfolio',
         'linkedin_url',
-        'github_url',
+        'github_username',
         'source',
         'first_name',
         'last_name',
