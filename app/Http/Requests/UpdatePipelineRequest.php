@@ -19,12 +19,13 @@ class UpdatePipelineRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
+  public function rules(): array
     {
        return [
             'job_role_id' => 'sometimes|exists:job_roles,id',
             'candidate_id' => 'sometimes|exists:candidates,id',
-            'stage_id' => 'sometimes|exists:stages,id',
+            'stage_id' => 'nullable|exists:custom_stages,id',
+            'global_stages' => 'nullable|in:applied,screen,hired,rejected',
             'intreview_id' => 'nullable|exists:intreviews,id',
         ];
     }

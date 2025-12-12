@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
-
+   use App\Models\CustomStage;
 class JobRoles extends Model
 {
      /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -27,10 +27,16 @@ class JobRoles extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-   
-/**
- * Get job role stages pivot entries
- */
+     public function customStages()
+    {
+        return $this->hasMany(CustomStage::class, 'job_role_id')->orderBy('order');
+    }
 
-
+    
+    public function getFirstCustomStage()
+    {
+        return $this->customStages()->orderBy('order')->first();
+    }
 }
+
+

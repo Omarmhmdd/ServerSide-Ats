@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CustomStage extends Model
 {
-    protected $fillable = [
+     protected $fillable = [
         'job_role_id',
         'name',
         'order',
@@ -16,4 +16,20 @@ class CustomStage extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the job role this stage belongs to
+     */
+    public function jobRole()
+    {
+        return $this->belongsTo(JobRoles::class, 'job_role_id');
+    }
+
+    /**
+     * Get all pipelines in this stage
+     */
+    public function pipelines()
+    {
+        return $this->hasMany(Pipeline::class, 'stage_id');
+    }
 }

@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\CustomStage;
 class Pipeline extends Model
 {
     protected $fillable = [
@@ -11,6 +11,7 @@ class Pipeline extends Model
         'intreview_id',
         'candidate_id',
         'stage_id',
+        'global_stages',
     ];
 
     protected $casts = [
@@ -22,9 +23,7 @@ class Pipeline extends Model
         return $this->belongsTo(JobRoles::class, 'job_role_id');
     }
 
-    /**
-     * Get the interview
-     */
+    
     public function interview()
     {
         return $this->belongsTo(Interview::class, 'intreview_id');
@@ -35,15 +34,47 @@ class Pipeline extends Model
      */
     public function candidate()
     {
-        return $this->belongsTo(Candidates::class, 'candidate_id');
+        return $this->belongsTo(Candidate::class, 'candidate_id');
     }
 
-    /**
-     * Get the stage
-     */
-    public function stage()
-    {
-        return $this->belongsTo(Stage::class, 'stage_id');
-    }
-
+    public function customStage()
+{
+    return $this->belongsTo(CustomStage::class, 'stage_id');
 }
+  public function canMoveNext(): bool
+    {
+        $next = $this->getNextStage();
+        return $next !== null && $next !== 'hired' && $next !== 'rejected';
+    }
+
+    
+    public function hasCompletedAllCustomStages(): bool
+    {
+        if ($this->global_stages === 'hired' || $this->global_stages === 'rejected') {
+            return true;
+        }
+        
+        if ($this->stage_id) {
+            // Check if this is the last custom stage
+            $currentStage = CustomStage::find($this->stage_id);
+            if (!$currentStage) {
+                return false;
+            }
+            
+            $lastCustomStage = CustomStage::where('job_role_id', $this->job_role_id)
+                ->orderBy('order', 'desc')
+                ->first();
+            
+            if (!$lastCustomStage) {
+                return false;
+            }
+            
+            return $currentStage->order >= $lastCustomStage->order;
+        }
+        
+        return false;
+    }
+}
+
+
+
