@@ -27,10 +27,16 @@ class JobRole extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+     public function customStages()
+    {
+        return $this->hasMany(CustomStage::class, 'job_role_id')->orderBy('order');
+    }
 
-/**
- * Get job role stages pivot entries
- */
-
-
+    
+    public function getFirstCustomStage()
+    {
+        return $this->customStages()->orderBy('order')->first();
+    }
 }
+
+
