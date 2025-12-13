@@ -3,17 +3,11 @@
 namespace App\Imports;
 
 use App\Models\Candidate;
-use App\Models\MetaData;
-use App\Models\Pipeline;
-use Http;
-use Log;
+use IngestCandidateToRag;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Number;
-use PhpOffice\PhpSpreadsheet\Writer\Ods\Meta;
 use Throwable;
 
 class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
@@ -60,8 +54,10 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
             $new_candidate->save();
 
 
-           // create new pipeline here
+            // create new pipeline here
 
+            // dispatch ingestion job
+            IngestCandidateToRag::dispatch($new_candidate->id);
             return $new_candidate;
         }catch(Throwable $e){
             $this->onError($e);

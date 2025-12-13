@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Candidate\Services\CandidateImportService;
 use App\Http\Requests\CandidateImportForm;
-use App\Services\CandidateImportService;
 use Auth;
 use Exception;
 

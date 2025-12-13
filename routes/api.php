@@ -5,6 +5,7 @@ use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\CandidateImportController;
 use App\Http\Controllers\GithubController;
 use App\Http\Controllers\InterviewController;
+use App\Http\Controllers\RagCopilotController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\StageController;
@@ -21,6 +22,11 @@ Route::group(["prefix" => "v0.1"], function () {
         // CANDIDATES
         Route::group(["prefix" => "candidate"] , function(){
             Route::post("/import" , [CandidateImportController::class , "import"]);
+        });
+
+        // COPILOT
+        Route::group(["prefix" => "copilot"] , function(){
+            Route::post("/ask" , [RagCopilotController::class , "ask"]);
         });
 
         // INTERVIEW ROUTES
@@ -62,8 +68,8 @@ Route::group(["prefix" => "v0.1"], function () {
               
             
             // Per-role stage routes
-    //     Route::get("/job-role/{jobRoleId}", [StageController::class, "getStagesForJobRole"]);
-         //   Route::post("/job-role/{jobRoleId}/assign", [StageController::class, "assignStagesToJobRole"])->middleware("role:admin,recruiter");
+            //Route::get("/job-role/{jobRoleId}", [StageController::class, "getStagesForJobRole"]);
+            //Route::post("/job-role/{jobRoleId}/assign", [StageController::class, "assignStagesToJobRole"])->middleware("role:admin,recruiter");
            // Route::post("/job-role/{jobRoleId}/order", [StageController::class, "updateStageOrderForJobRole"])->middleware("role:admin,recruiter");
         });
 

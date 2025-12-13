@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Candidate\Services\CandidateService;
 use App\Http\Requests\metaDataRequest;
-use App\Services\CandidateService;
 use Exception;
 use Log;
 
@@ -18,7 +18,6 @@ class CandidateController extends Controller
         }
     }
 
-
     public function getCandidateData(){// for n8n for meta data creation
         try{
             $candidateData = CandidateService::getCandidateData();
@@ -27,6 +26,9 @@ class CandidateController extends Controller
             return $this->errorResponse("Failed to get candidates data" . $ex->getMessage());
         }
     }
+
+
+    
 
 
 }

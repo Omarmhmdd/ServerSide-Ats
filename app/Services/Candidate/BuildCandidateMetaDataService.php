@@ -1,13 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Candidate\Services;
 
 use App\Models\Candidate;
 use DB;
-use Log;
 
-class BuildCandidateMetaDataService
-{
+class BuildCandidateMetaDataService{
     public static function buildInsertStrings(array $allMetaData){
         $candidateRepositories        = [];
         $candidateRepoTechnologies    = [];
@@ -19,9 +17,6 @@ class BuildCandidateMetaDataService
         $candidateProjectSkills       = [];
 
         $items = $allMetaData["meta_data"];
-        Log::debug(print_r($items , true));
-
-        // don't ask me how I'm iterating over this array only god knows
         for($i = 0 ; $i < count($items); $i++){
             $data = $items[$i]["json"];
             $candidateId = $data["candidate_id"];
@@ -40,7 +35,7 @@ class BuildCandidateMetaDataService
             self::buildCertifications($candidateCertifications, $candidateId, $certs);
             self::buildProjects($candidateProjects, $candidateProjectSkills, $candidateId, $projects);
 
-            // update candidate as processed
+            // set candidate as processed
             $candidate = Candidate::where('id' , $candidateId)->first();
             if($candidate){
                 $candidate->processed = 1;

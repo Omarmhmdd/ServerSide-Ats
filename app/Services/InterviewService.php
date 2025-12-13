@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Candidate;
 use App\Models\Interview;
 use App\Models\JobRoles;
-use App\Models\Pipeline;
 use Carbon\Carbon;
 use Exception;
 use Http;
@@ -27,7 +26,7 @@ class InterviewService {
             "emails" => $list_of_emails,
             "interviews" => $list_of_interviews
         ];
-        Http::post("http://localhost:5678/webhook-test/sendEmails" , $payload);
+        Http::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
         
         return true;
     }
@@ -59,7 +58,6 @@ class InterviewService {
             'hiring_manager_id' => $jobRole->hiring_manager_id
         ];
     }
-
     private static function chooseNextBestSchedule($list_of_emails , $required_ids){
 
         $last_interview_time = self::getLastInterviewTime($required_ids["hiring_manager_id"]);

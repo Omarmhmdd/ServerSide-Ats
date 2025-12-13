@@ -1,18 +1,13 @@
 <?php
 
-namespace App\Services;
+namespace App\CV\Services;
 
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Smalot\PdfParser\Parser as PdfParser;
 use PhpOffice\PhpWord\IOFactory;
-use Storage;
 
-class CVExtractionService
-{
-    /**
-     * Download file (PDF/DOCX/TXT) from URL into temporary storage.
-     */
+class CVExtractionService{
     private function downloadTempFile($url){
         $url = $this->convertGoogleDriveUrl($url);
         $response = Http::get($url);
@@ -32,11 +27,7 @@ class CVExtractionService
         return $tempPath;
     }
 
-    /**
-     * Main function: download → extract → delete
-     */
-    public function extract($url)
-    {
+    public function extract($url){
         $filePath = $this->downloadTempFile($url);
 
         if (!$filePath) {
@@ -65,16 +56,14 @@ class CVExtractionService
         return $text;
     }
 
-    private function extractPdf($filePath)
-    {
+    private function extractPdf($filePath){
         $parser = new PdfParser();
         $pdf = $parser->parseFile($filePath);
 
         return $pdf->getText();
     }
 
-    private function extractDocx($filePath)
-    {
+    private function extractDocx($filePath){
         $phpWord = IOFactory::load($filePath);
         $text = "";
 
@@ -90,7 +79,7 @@ class CVExtractionService
     }
 
     private function convertGoogleDriveUrl($url){
-        // Extract the file ID
+        // extract the file ID
         preg_match('/\/d\/(.*?)\//', $url, $matches);
         if (!isset($matches[1])) {
             return $url; // Not a Google Drive link
@@ -98,7 +87,7 @@ class CVExtractionService
 
         $fileId = $matches[1];
 
-        // Return direct download URL
+        // return direct download URL
         return "https://drive.google.com/uc?export=download&id={$fileId}";
     }
 

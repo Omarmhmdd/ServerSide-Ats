@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Candidate\Services;
 
-use App\Services\BuildCandidateMetaDataService;
+use App\CV\Services\CVExtractionService;
 use App\Models\Candidate;
-use App\Services\CVExtractionService;
+use App\Services\GitHubService;
+use App\Services\InterviewService;
 use Exception;
-use Log;
 
 class CandidateService{
     public static function saveMetaData(array $allMetaData){
@@ -40,8 +40,7 @@ class CandidateService{
         InterviewService::scheduleInterviews($listOfEmails);
     }
 
-
-    private static function cleanUtf8($str){
+    public static function cleanUtf8($str){
         return $str ? mb_convert_encoding($str, 'UTF-8', 'UTF-8') : null;
     }
 

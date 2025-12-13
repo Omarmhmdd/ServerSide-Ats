@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class GitHubService
 {
-    private $baseUrl = "https://api.github.com";
+    private $baseUrl = env('GITHUB_URL');
 
     public function getUser($username){
         $response = Http::get("{$this->baseUrl}/users/{$username}");
