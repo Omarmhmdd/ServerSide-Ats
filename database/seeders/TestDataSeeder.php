@@ -25,6 +25,10 @@ class TestDataSeeder extends Seeder
                 ['name' => $role]
             );
         }
+       // $adminRole = UserRole::where('name', 'admin')->first();
+$recruiterRole = UserRole::where('name', 'recruiter')->first();
+$interviewerRole = UserRole::where('name', 'interviewer')->first();
+
 
         // Get admin user (or create one)
         $admin = User::where('email', 'admin@test.com')->first();
@@ -41,6 +45,41 @@ class TestDataSeeder extends Seeder
             $admin->password = 'password123';
             $admin->save();
         }
+            $recruiter = User::where('email', 'recruiter@test.com')->first();
+    if (!$recruiter) {
+        $recruiter = User::create([
+            'name' => 'Recruiter User',
+            'email' => 'recruiter@test.com',
+            'password' => 'password123',
+            'phone' => '1234567891',
+            'role_id' => $recruiterRole->id,
+        ]);
+    } else {
+        $recruiter->password = 'password123';
+        $recruiter->role_id = $recruiterRole->id;
+        $recruiter->save();
+    }
+
+    // Create or update Interviewer user
+    $interviewer = User::where('email', 'interviewer@test.com')->first();
+    if (!$interviewer) {
+        $interviewer = User::create([
+            'name' => 'Interviewer User',
+            'email' => 'interviewer@test.com',
+            'password' => 'password123',
+            'phone' => '1234567892',
+            'role_id' => $interviewerRole->id,
+        ]);
+    } else {
+        $interviewer->password = 'password123';
+        $interviewer->role_id = $interviewerRole->id;
+        $interviewer->save();
+    }
+
+
+
+
+
 
         // Create a test level
         $level = Level::firstOrCreate(
