@@ -35,8 +35,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
-
-    public function chunkSize(): int{
+  public function chunkSize(): int{
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
     public function model(array $row){
@@ -44,6 +43,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
             $new_candidate =  new Candidate([
                 'first_name'    => $row['first_name'] ?? null,
                 'last_name'     => $row['last_name'] ?? null,
+                'email'         => $row['email'] ?? null,
                 'portfolio'     => $row['portfolio'] ?? null,
                 'linkedin_url'  => $row['linkedin_url'] ?? null,
                 'github_url'    => $row['github_url'] ?? null,
@@ -54,14 +54,22 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
                 'attachments' => $row["cv"] ?? null,
                 'recruiter_id'  => (int)$this->recruiterId,
                 'job_role_id'   => (int)$this->jobRoleId,
-                'meta_data_id' => 1,// for now
+                'processed'     => 0,
             ]);   
 
             $new_candidate->save();
 
 
            // create new pipeline here
-
+           // create Pipeline
+            $new_pipeline = new Pipeline([
+                'job_role_id' => (int)$this->jobRoleId,
+                'intreview_id' => null,
+                'candidate_id' => $new_candidate->id,
+                'global_stages' => 'applied', // Use plural: global_stages
+                'stage_id' => null, // null when in global stage
+            ]);
+            $new_pipeline->save();
             return $new_candidate;
         }catch(Throwable $e){
             $this->onError($e);

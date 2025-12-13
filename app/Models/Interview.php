@@ -8,7 +8,7 @@ class Interview extends Model
 {
      protected $table = 'intreviews';
     protected $fillable = [
-        'interveiwer_id',
+        'intreveiwer_id',
         'job_role_id',
         'candidate_id',
         'type',
@@ -42,7 +42,7 @@ class Interview extends Model
      */
     public function candidate()
     {
-        return $this->belongsTo(Candidates::class, 'candidate_id');
+        return $this->belongsTo(Candidate::class, 'candidate_id');
     }
 }
 
