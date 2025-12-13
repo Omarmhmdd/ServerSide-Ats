@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CustomStageService
 {
-    /**
-     * Check if user can access job role based on role
-     */
+    
     private function canAccessJobRole(JobRoles $jobRole): bool
     {
         /** @var \App\Models\User|null $user */
@@ -41,9 +39,7 @@ class CustomStageService
         return true;
     }
 
-    /**
-     * Get job role IDs that belong to the current recruiter
-     */
+    
     private function getRecruiterJobRoleIds(): array
     {
         /** @var \App\Models\User|null $user */
@@ -67,9 +63,7 @@ class CustomStageService
             ->toArray();
     }
 
-    /**
-     * Get all custom stages for a job role
-     */
+    
     public function getStagesForJobRole(int $jobRoleId): Collection
     {
         $jobRole = JobRoles::find($jobRoleId);
@@ -86,9 +80,7 @@ class CustomStageService
         return $jobRole->customStages;
     }
 
-    /**
-     * Create a custom stage for a job role
-     */
+    
     public function createStage(int $jobRoleId, string $name, int $order): CustomStage
     {
         $jobRole = JobRoles::find($jobRoleId);
@@ -121,9 +113,7 @@ class CustomStageService
         ]);
     }
 
-    /**
-     * Update a custom stage
-     */
+    
     public function updateStage(int $id, array $data): CustomStage
     {
         $stage = CustomStage::find($id);
@@ -151,9 +141,7 @@ class CustomStageService
         return $stage->fresh();
     }
 
-    /**
-     * Delete a custom stage
-     */
+   
     public function deleteStage(int $id): bool
     {
         $stage = CustomStage::find($id);
@@ -193,9 +181,7 @@ class CustomStageService
         return $deleted;
     }
 
-    /**
-     * Reorder stages for a job role
-     */
+    
     public function reorderStages(int $jobRoleId, array $stageOrders): void
     {
         $jobRole = JobRoles::find($jobRoleId);
@@ -216,9 +202,6 @@ class CustomStageService
         }
     }
 
-    /**
-     * Reorder a single stage
-     */
     private function reorderStage(CustomStage $stage, int $newOrder): void
     {
         $oldOrder = $stage->order;

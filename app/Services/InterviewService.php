@@ -186,9 +186,7 @@ class InterviewService {
         return true;
     }
 
-    /**
-     * Get job role IDs that belong to the current recruiter
-     */
+    
     private static function getRecruiterJobRoleIds(): array
     {
         /** @var \App\Models\User|null $user */

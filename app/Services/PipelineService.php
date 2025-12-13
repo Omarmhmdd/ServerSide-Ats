@@ -13,17 +13,13 @@ use App\Models\User;
 
 class PipelineService
 {
-    /**
-     * Create a new class instance.
-     */
+   
     public function __construct()
     {
         //
     }
 
-    /**
-     * Check if user can access pipeline based on role
-     */
+    
     private function canAccessPipeline(Pipeline $pipeline): bool
     {
         /** @var \App\Models\User|null $user */
@@ -62,9 +58,7 @@ class PipelineService
         return true;
     }
 
-    /**
-     * Get job role IDs that belong to the current recruiter
-     */
+   
     private function getRecruiterJobRoleIds(): array
     {
         /** @var \App\Models\User|null $user */
@@ -114,9 +108,7 @@ class PipelineService
         return $query->latest()->get();
     }
 
-    /**
-     * Get pipeline by ID
-     */
+   
     public function getPipelineById(int $id): Pipeline
     {
         $pipeline = Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
@@ -134,10 +126,7 @@ class PipelineService
         return $pipeline;
     }
 
-    /**
-     * Create a new pipeline entry
-     * Prevents duplicates by checking for existing pipeline for candidate + job_role
-     */
+   
     public function createPipeline(array $data): Pipeline
     {
         // Check if pipeline already exists for this candidate and job role
@@ -177,9 +166,7 @@ class PipelineService
         return $pipeline;
     }
 
-    /**
-     * Update a pipeline entry
-     */
+   
     public function updatePipeline(int $id, array $data): Pipeline
     {
         $pipeline = Pipeline::find($id);
@@ -199,9 +186,7 @@ class PipelineService
         return $pipeline;
     }
 
-    /**
-     * Delete a pipeline entry
-     */
+   
     public function deletePipeline(int $id): bool
     {
         $pipeline = Pipeline::find($id);
@@ -218,9 +203,7 @@ class PipelineService
         return $pipeline->delete();
     }
 
-    /**
-     * Get pipelines by job role ID
-     */
+
     public function getPipelinesByJobRole(int $jobRoleId): Collection
     {
         $user = Auth::user();
@@ -246,9 +229,7 @@ class PipelineService
             ->get();
     }
 
-    /**
-     * Get pipelines by candidate ID
-     */
+
     public function getPipelinesByCandidate(int $candidateId): Collection
     {
         $user = Auth::user();
@@ -276,9 +257,7 @@ class PipelineService
         return $query->latest()->get();
     }
 
-    /**
-     * Get pipelines by stage ID
-     */
+
     public function getPipelinesByStage(int $stageId): Collection
     {
         $user = Auth::user();
@@ -312,9 +291,7 @@ class PipelineService
         return $query->latest()->get();
     }
 
-    /**
-     * Move candidate to a specific custom stage
-     */
+ 
     public function moveCandidateToStage(int $id, int $stageId): Pipeline
     {
         $pipeline = Pipeline::find($id);
@@ -345,9 +322,7 @@ class PipelineService
         return $pipeline->fresh(['jobRole', 'candidate', 'customStage', 'interview']);
     }
 
-    /**
-     * Move candidate to next stage in order
-     */
+
     public function moveToNextStage(int $id): Pipeline
     {
         $pipeline = Pipeline::find($id);
@@ -392,9 +367,7 @@ class PipelineService
         return $pipeline->fresh(['jobRole', 'candidate', 'customStage', 'interview']);
     }
 
-    /**
-     * Reject candidate
-     */
+
     public function rejectCandidate(int $id): Pipeline
     {
         $pipeline = Pipeline::find($id);
@@ -420,9 +393,7 @@ class PipelineService
         return $pipeline->fresh(['jobRole', 'candidate', 'customStage', 'interview']);
     }
 
-    /**
-     * Hire candidate
-     */
+
     public function hireCandidate(int $id): Pipeline
     {
         $pipeline = Pipeline::find($id);
@@ -449,9 +420,7 @@ class PipelineService
         return $pipeline->fresh(['jobRole', 'candidate', 'customStage', 'interview']);
     }
 
-    /**
-     * Get pipeline statistics for a job role (candidate counts per stage)
-     */
+
     public function getPipelineStatistics(int $jobRoleId): array
     {
         $user = Auth::user();
@@ -507,9 +476,7 @@ class PipelineService
         return $statistics;
     }
 
-    /**
-     * Get Kanban board data for a job role
-     */
+ 
     public function getKanbanBoard(int $jobRoleId): array
     {
         $user = Auth::user();
@@ -606,9 +573,7 @@ class PipelineService
         return $kanban;
     }
 
-    /**
-     * Format candidate data for Kanban board
-     */
+
     private function formatKanbanCandidate($pipeline): array
     {
         return [
