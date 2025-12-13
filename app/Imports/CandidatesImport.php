@@ -29,11 +29,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
-<<<<<<< HEAD
     public function chunkSize(): int{
-=======
-  public function chunkSize(): int{
->>>>>>> e29b71efd7c7959d60cd4942664193037134a514
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
 
