@@ -9,7 +9,6 @@ class Candidate extends Model
     protected $fillable = [
         'recruiter_id',
         'job_role_id',
-        'meta_data_id',
         'portfolio',
         'linkedin_url',
         'github_username',

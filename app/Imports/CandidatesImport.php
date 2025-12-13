@@ -29,7 +29,11 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
+<<<<<<< HEAD
     public function chunkSize(): int{
+=======
+  public function chunkSize(): int{
+>>>>>>> e29b71efd7c7959d60cd4942664193037134a514
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
 
@@ -49,16 +53,25 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
                 'attachments' => $row["cv"] ?? null,
                 'recruiter_id'  => $this->recruiterId,
                 'job_role_id'   => (int)$this->jobRoleId,
+                'processed'     => 0,
             ]);   
 
             $new_candidate->save();
 
-
-            // create new pipeline here
+           // create new pipeline here
+            $new_pipeline = new Pipeline([
+                'job_role_id' => (int)$this->jobRoleId,
+                'intreview_id' => null,
+                'candidate_id' => $new_candidate->id,
+                'global_stages' => 'applied', // Use plural: global_stages
+                'stage_id' => null, // null when in global stage
+            ]);
 
             // dispatch ingestion job
             IngestCandidateToRag::dispatch($new_candidate->id);
             
+
+            $new_pipeline->save();
             return $new_candidate;
         }catch(Throwable $e){
             $this->onError($e);

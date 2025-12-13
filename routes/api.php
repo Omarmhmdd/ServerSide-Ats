@@ -1,23 +1,49 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HiringManagerController;
+use App\Http\Controllers\JobRoleController;
+use App\Http\Controllers\RecruiterController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\CandidateImportController;
 use App\Http\Controllers\GithubController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\RagCopilotController;
-use Illuminate\Support\Facades\Route;
+// use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\StageController;
+   use App\Http\Controllers\CustomStageController;
 
 Route::group(["prefix" => "v0.1"], function () {
 
     // UNPROTECTED ROUTES
-    Route::post("/login", [AuthController::class, "login"]);
-    Route::post("/signup", [AuthController::class, "register"]);
+    Route::post("/login" , [AuthController::class , "login"]);
+    Route::post("/signup" , [AuthController::class , "register"]);
 
     // AUTHENTICATED ROUTES
-    Route::group(["prefix" => "auth", "middleware" => "auth:api"], function () {
+    // AUTHINTICATABLES
+    Route::group(["prefix"=>"auth" , "middleware" => "auth:api"] , function(){
+        Route::get("/recruiters", [RecruiterController::class,"getRecruiters"]);
+        Route::get("/hiring_managers", [HiringManagerController::class,"getHiringManagers"]);
+
+
+        // Recruiter
+        // Candidates
+        // JOB ROLES
+        Route::group(["prefix"=>"job_roles"] , function(){
+            Route::get("/levels", [JobRoleController::class,"getLevels"]);
+            Route::get("/{id?}", [JobRoleController::class,"getJobRoles"]);
+            Route::post("/add_update_job_role", [JobRoleController::class,"addOrUpdateJobRole"]);
+            Route::post("/delete_role/{id?}", [JobRoleController::class,"deleteJobRole"]);
+        });
+
+        // PIPELINE
+        // N8N
+        // CANDIDATES
+        // OFFERS
+        // INTERVIEW
+    });
 
         // CANDIDATES
         Route::group(["prefix" => "candidate"] , function(){
@@ -54,25 +80,42 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/job-role/{jobRoleId}", [PipelineController::class, "getByJobRole"]);
             Route::get("/candidate/{candidateId}", [PipelineController::class, "getByCandidate"]);
             Route::get("/stage/{stageId}", [PipelineController::class, "getByStage"]);
-            Route::post("/{id}/move-stage", [PipelineController::class, "moveToStage"]);
-            Route::get("/job-role/{jobRoleId}/statistics", [PipelineController::class, "getStatistics"]);
+         //   Route::post("/{id}/move-stage", [PipelineController::class, "moveToStage"]);
+        //    Route::get("/job-role/{jobRoleId}/statistics", [PipelineController::class, "getStatistics"]);
+               Route::post("/{id}/move-next", [PipelineController::class, "moveToNext"])->middleware("role:admin,recruiter");
+            Route::post("/{id}/reject", [PipelineController::class, "reject"])->middleware("role:admin,recruiter");
+            Route::post("/{id}/hire", [PipelineController::class, "hire"])->middleware("role:admin,recruiter");
+            Route::get("/job-role/{jobRoleId}/statistics", [PipelineController::class, "getStatistics"])->middleware("role:admin,recruiter,interviewer");
+            Route::get("/job-role/{jobRoleId}/kanban", [PipelineController::class, "getKanbanBoard"])->middleware("role:admin,recruiter,interviewer");
         });
 
         // STAGE ROUTES
         // Admin and Recruiter can manage stages
-        Route::prefix("stages")->group(function () {
+/*     Route::prefix("stages")->group(function () {
             Route::get("/", [StageController::class, "index"]);
             Route::post("/", [StageController::class, "store"])->middleware("role:admin,recruiter");
             Route::get("/{id}", [StageController::class, "show"]);
             Route::post("/{id}/update", [StageController::class, "update"])->middleware("role:admin,recruiter");
             Route::post("/{id}/delete", [StageController::class, "destroy"])->middleware("role:admin,recruiter");
-              
+        
             
+
+
             // Per-role stage routes
-            //Route::get("/job-role/{jobRoleId}", [StageController::class, "getStagesForJobRole"]);
-            //Route::post("/job-role/{jobRoleId}/assign", [StageController::class, "assignStagesToJobRole"])->middleware("role:admin,recruiter");
+            //     Route::get("/job-role/{jobRoleId}", [StageController::class, "getStagesForJobRole"]);
+            //   Route::post("/job-role/{jobRoleId}/assign", [StageController::class, "assignStagesToJobRole"])->middleware("role:admin,recruiter");
            // Route::post("/job-role/{jobRoleId}/order", [StageController::class, "updateStageOrderForJobRole"])->middleware("role:admin,recruiter");
-        });
+        });*/
+            Route::prefix("job-roles")->group(function () {
+            Route::get("/{jobRoleId}/stages", [CustomStageController::class, "getStagesForJobRole"])->middleware("role:admin,recruiter,interviewer");
+            Route::post("/{jobRoleId}/stages", [CustomStageController::class, "store"])->middleware("role:admin,recruiter");
+            Route::post("/{jobRoleId}/stages/reorder", [CustomStageController::class, "reorder"])->middleware("role:admin,recruiter");
+    });
+
+            Route::prefix("stages/custom")->group(function () {
+            Route::post("/{id}/update", [CustomStageController::class, "update"])->middleware("role:admin,recruiter");
+            Route::post("/{id}/delete", [CustomStageController::class, "destroy"])->middleware("role:admin,recruiter");
+    });
 
         // TODO:  Add routes for other modules
         // Recruiter routes
@@ -80,7 +123,6 @@ Route::group(["prefix" => "v0.1"], function () {
         // JOB ROLES routes
         // OFFERS routes
         // N8N webhook routes
-    });
 
     // N8N
     Route::group(["prefix" => "n8n"] , function(){
