@@ -17,7 +17,7 @@ class CandidateController extends Controller
             return $this->errorResponse("Failed to save meta data for candidate" , 500 , ["1" => $ex->getMessage()]);
         }
     }
-
+ 
 
     public function getCandidateData(){// for n8n for meta data creation
         try{
