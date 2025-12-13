@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
-   use App\Models\CustomStage;
-class JobRoles extends Model
+
+class JobRole extends Model
 {
      /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -20,7 +20,7 @@ class JobRoles extends Model
         'title',
         'description',
         'is_remote',
-        'is_on_sight',
+        'is_on_site',
     ];
 
     protected $casts = [

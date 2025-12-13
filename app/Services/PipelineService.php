@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CustomStage;
+use App\Models\JobRole;
 use App\Models\Pipeline;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -77,7 +78,7 @@ class PipelineService
             return [];
         }
         
-        return JobRoles::where('recruiter_id', $user->id)
+        return JobRole::where('recruiter_id', $user->id)
             ->pluck('id')
             ->toArray();
     }
@@ -216,7 +217,7 @@ class PipelineService
             }
             
             if ($user->isRecruiter()) {
-                $jobRole = JobRoles::find($jobRoleId);
+                $jobRole = JobRole::find($jobRoleId);
                 if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
                     throw new ModelNotFoundException('Job role not found');
                 }
@@ -258,14 +259,15 @@ class PipelineService
     }
 
 
-    public function getPipelinesByStage(int $stageId): Collection
+    public function getPipelinesByStage(int $stageId)//: Collection
     {
         $user = Auth::user();
         
         // Get the custom stage to check job role
         $customStage = CustomStage::find($stageId);
         if (!$customStage) {
-            return $query->whereRaw('1 = 0')->get();
+            return [];
+            //$query->whereRaw('1 = 0')->get();
         }
         
         $query = Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
@@ -433,7 +435,7 @@ class PipelineService
             }
             
             if ($user->isRecruiter()) {
-                $jobRole = JobRoles::find($jobRoleId);
+                $jobRole = JobRole::find($jobRoleId);
                 if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
                     throw new ModelNotFoundException('Job role not found');
                 }
@@ -489,7 +491,7 @@ class PipelineService
             }
             
             if ($user->isRecruiter()) {
-                $jobRole = JobRoles::find($jobRoleId);
+                $jobRole = JobRole::find($jobRoleId);
                 if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
                     throw new ModelNotFoundException('Job role not found');
                 }

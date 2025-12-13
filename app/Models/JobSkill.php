@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 
-class JobSkills extends Model
+class JobSkill extends Model
 {
        /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;

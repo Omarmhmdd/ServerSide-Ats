@@ -4,7 +4,8 @@ namespace App\Services;
 
 use App\Models\Candidate;
 use App\Models\Interview;
-use App\Models\JobRoles;
+use App\Models\JobRole;
+
 use App\Models\Pipeline;
 use Carbon\Carbon;
 use Http;
@@ -37,7 +38,7 @@ class InterviewService {
                         ])->first();
 
         // then get the hiring_manager_id of this job
-        $hiring_manager_id = JobRoles::where('id' , $required_ids["job_role_id"])
+        $hiring_manager_id = JobRole::where('id' , $required_ids["job_role_id"])
                                     ->select("hiring_manager_id")
                                     ->first();
         return[
@@ -205,7 +206,7 @@ class InterviewService {
             return [];
         }
         
-        return JobRoles::where('recruiter_id', $user->id)
+        return JobRole::where('recruiter_id', $user->id)
             ->pluck('id')
             ->toArray();
     }
@@ -262,7 +263,7 @@ class InterviewService {
             }
             
             if ($user->isRecruiter()) {
-                $jobRole = JobRoles::find($data['job_role_id']);
+                $jobRole = JobRole::find($data['job_role_id']);
                 if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
                     throw new ModelNotFoundException('Job role not found');
                 }

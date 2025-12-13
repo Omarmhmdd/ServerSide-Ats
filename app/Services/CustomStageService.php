@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use App\Models\CustomStage;
-use App\Models\JobRoles;
+use App\Models\JobRole;
+
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class CustomStageService
 {
     
-    private function canAccessJobRole(JobRoles $jobRole): bool
+    private function canAccessJobRole(JobRole $jobRole): bool
     {
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
@@ -58,7 +59,7 @@ class CustomStageService
             return [];
         }
         
-        return JobRoles::where('recruiter_id', $user->id)
+        return JobRole::where('recruiter_id', $user->id)
             ->pluck('id')
             ->toArray();
     }
@@ -66,7 +67,7 @@ class CustomStageService
     
     public function getStagesForJobRole(int $jobRoleId): Collection
     {
-        $jobRole = JobRoles::find($jobRoleId);
+        $jobRole = JobRole::find($jobRoleId);
         
         if (!$jobRole) {
             throw new ModelNotFoundException('Job role not found');
@@ -83,7 +84,7 @@ class CustomStageService
     
     public function createStage(int $jobRoleId, string $name, int $order): CustomStage
     {
-        $jobRole = JobRoles::find($jobRoleId);
+        $jobRole = JobRole::find($jobRoleId);
         
         if (!$jobRole) {
             throw new ModelNotFoundException('Job role not found');
@@ -184,7 +185,7 @@ class CustomStageService
     
     public function reorderStages(int $jobRoleId, array $stageOrders): void
     {
-        $jobRole = JobRoles::find($jobRoleId);
+        $jobRole = JobRole::find($jobRoleId);
         
         if (!$jobRole) {
             throw new ModelNotFoundException('Job role not found');
