@@ -34,7 +34,7 @@ class Interview extends Model
      */
     public function jobRole()
     {
-        return $this->belongsTo(JobRoles::class, 'job_role_id');
+        return $this->belongsTo(JobRole::class, 'job_role_id');
     }
 
     /**
@@ -42,7 +42,7 @@ class Interview extends Model
      */
     public function candidate()
     {
-        return $this->belongsTo(Candidates::class, 'candidate_id');
+        return $this->belongsTo(Candidate::class, 'candidate_id');
     }
 }
 

@@ -2,14 +2,20 @@
 
 namespace App\Services;
 
+use App\Http\Requests\AIRequest;
 use App\Models\Candidate;
 use App\Models\Interview;
+use App\Models\JobRole;
 use App\Models\JobRoles;
 use App\Models\Pipeline;
+use App\Models\ScoreCard;
 use Carbon\Carbon;
-use Http;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class InterviewService {
     public static function scheduleInterviews($list_of_emails){
@@ -17,8 +23,8 @@ class InterviewService {
         $required_ids = self::getRequiredIds($list_of_emails);
 
         // then select best next time for the interviews
-        $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids); 
-        
+        $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids);
+
         // move users in pipeline to next stage => screening
 
         return true;
@@ -31,7 +37,7 @@ class InterviewService {
                         ])->first();
 
         // then get the hiring_manager_id of this job
-        $hiring_manager_id = JobRoles::where('id' , $required_ids["job_role_id"])
+        $hiring_manager_id = JobRole::where('id' , $required_ids["job_role_id"])
                                     ->select("hiring_manager_id")
                                     ->first();
         return[
@@ -48,7 +54,7 @@ class InterviewService {
         $end_time   = Carbon::parse('14:00');
 
         // if no interviews, set interview to a week from now at 8 am
-        if(!$last_interview_time){   
+        if(!$last_interview_time){
             $next_interview_time = now()
                 ->addWeek()
                 ->startOfDay()
@@ -58,11 +64,11 @@ class InterviewService {
         }
 
         return self::createSchedules($list_of_emails , $next_interview_time  ,$required_ids["hiring_manager_id"] , $end_time , $required_ids["job_role_id"]);
-       
+
     }
     private static function getLastInterviewTime($hiring_manager_id){
          return Interview::where('interviewer_id', $hiring_manager_id)
-            ->orderBy('schedule', 'desc') 
+            ->orderBy('schedule', 'desc')
             ->value('schedule');
     }
     private static function determineNextInterviewTime($last_interview_time , $end_time){
@@ -133,7 +139,7 @@ class InterviewService {
     public static function createInterview(array $data): Interview{
         $interview = Interview::create($data);
         $interview->load(['interviewer', 'jobRole', 'candidate']);
-        
+
         return $interview;
     }
     public static function updateInterview(int $id, array $data): Interview{
@@ -171,7 +177,7 @@ class InterviewService {
     }
     public static function updateInterviewStatus(int $id, string $status): Interview{
         $validStatuses = ['no show', 'completed', 'canceled', 'posptponed', 'pending'];
-        
+
         if (!in_array($status, $validStatuses)) {
             throw new \InvalidArgumentException('Invalid status provided');
         }
@@ -187,7 +193,65 @@ class InterviewService {
 
         return $interview;
     }
+
+    public static function MarkAsComplete($id){
+        $interview = self::getInterviewById($id);
+        $url = "http://localhost:5678/webhook-test/complete_interview";
+        Http::post($url,[
+            'candidate_id' => $interview->candidate_id,
+            'interview_id' => $interview->id,
+            'candidate_name' => $interview->candidate->first_name,
+            'role_title' => $interview->jobRole->title,
+            'interview_type' => $interview->type,
+            'interview_notes' => $interview->notes,
+        ]);
+
+    }
+
+    public static function createScoreCard($request)
+    {
+        return DB::transaction(function () use ($request) {
+
+            $input = $request->validated();
+
+            $dataToSave = [
+                'intreview_id'              => $input['interview_id'],
+                'candidate_id'              => $input['candidate_id'],
+
+                'ctieria'                   => json_encode($input['scorecard']),
+
+                'summary'                   => $input['summary'],
+
+                'written_evidence'          => $input['scorecard']['communication']['evidence'] ?? 'See criteria for details',
+
+                'overall_recommnedation_id' => "1",
+            ];
+
+            return self::saveScorecard($dataToSave, 0);
+        });
+    }
+
+    private static function saveScorecard($data, $id)
+    {
+        if ($id == 0) {
+            $scorecard = new ScoreCard();
+        } else {
+            $scorecard = ScoreCard::find($id);
+            if (!$scorecard) {
+                throw new Exception("No Scorecard Found.");
+            }
+        }
+
+        $scorecard->fill($data);
+
+        if ($scorecard->save()) {
+            return $scorecard;
+        }
+
+        throw new Exception("Error Saving Scorecard.");
+    }
 }
+
 
 
 

@@ -11,7 +11,7 @@ class JobRole extends Model
      /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-
+    
     protected $fillable = [
         'recruiter_id',
         'level_id',
@@ -27,7 +27,7 @@ class JobRole extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-   
+
 /**
  * Get job role stages pivot entries
  */
