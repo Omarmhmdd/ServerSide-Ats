@@ -25,7 +25,7 @@ class StorePipelineRequest extends FormRequest
             'job_role_id' => 'required|exists:job_roles,id',
             'candidate_id' => 'required|exists:candidates,id',
             'stage_id' => 'nullable|exists:custom_stages,id',
-            'global_stages' => 'nullable|in:applied,screen,hired,rejected',
+            'global_stages' => 'nullable|in:applied,screen,offer,hired,rejected',
             'intreview_id' => 'nullable|exists:intreviews,id',
         ];
     }

@@ -72,7 +72,7 @@ class PipelineService
         }
         
         // Ensure stage_id is null when in global stage
-        if (isset($data['global_stages']) && in_array($data['global_stages'], ['applied', 'screen', 'hired', 'rejected'])) {
+        if (isset($data['global_stages']) && in_array($data['global_stages'], ['applied', 'screen','offer', 'hired', 'rejected'])) {
             $data['stage_id'] = null;
         }
         
@@ -168,6 +168,11 @@ class PipelineService
             $pipeline->update([
                 'global_stages' => 'screen',
                 'stage_id' => null,
+            ]);}
+            elseif ($next === 'offer') {
+                $pipeline->update([
+                'global_stages' => 'offer',
+                'stage_id' => null,
             ]);
         } elseif ($next === 'hired') {
             $pipeline->update([
@@ -247,7 +252,7 @@ class PipelineService
         $statistics = [];
         
         // Add global stages
-        $globalStages = ['applied', 'screen', 'hired', 'rejected'];
+        $globalStages = ['applied', 'screen','offer', 'hired', 'rejected'];
         foreach ($globalStages as $globalStage) {
             $count = $pipelines->where('global_stages', $globalStage)->count();
             $statistics[] = [
@@ -306,6 +311,8 @@ class PipelineService
                 ->values()
                 ->toArray(),
         ];
+
+        
         
         // Custom stages columns
         foreach ($customStages as $stage) {
@@ -320,6 +327,15 @@ class PipelineService
                     ->toArray(),
             ];
         }
+        // Offer column
+        $kanban[] = [
+            'stage_type' => 'global',
+            'stage_name' => 'Offer',
+            'candidates' => $pipelines->where('global_stages', 'offer')
+                ->map(fn($p) => $this->formatKanbanCandidate($p))
+                ->values()
+                ->toArray(),
+        ];
         
         // Hired column
         $kanban[] = [
