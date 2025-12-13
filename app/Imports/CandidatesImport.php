@@ -3,17 +3,11 @@
 namespace App\Imports;
 
 use App\Models\Candidate;
-use App\Models\MetaData;
-use App\Models\Pipeline;
-use Http;
-use Log;
+use IngestCandidateToRag;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Number;
-use PhpOffice\PhpSpreadsheet\Writer\Ods\Meta;
 use Throwable;
 
 class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
@@ -27,7 +21,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
     use SkipsErrors;// error collection instead of distrubpting code flow
 
     protected int $recruiterId;
-    protected int $jobRoleId;
+    protected $jobRoleId;
 
     
     public function __construct($recruiterId, $jobRoleId){
@@ -35,9 +29,14 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
+<<<<<<< HEAD
+    public function chunkSize(): int{
+=======
   public function chunkSize(): int{
+>>>>>>> e29b71efd7c7959d60cd4942664193037134a514
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
+
     public function model(array $row){
         try{
             $new_candidate =  new Candidate([
@@ -46,22 +45,20 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
                 'email'         => $row['email'] ?? null,
                 'portfolio'     => $row['portfolio'] ?? null,
                 'linkedin_url'  => $row['linkedin_url'] ?? null,
-                'github_url'    => $row['github_url'] ?? null,
+                'github_username'    => $row['github_username'] ?? null,
                 'source'        => $row['source'] ?? null,
                 'location'      => $row['location'] ?? null,
                 'notes'         => $row['notes'] ?? null,
                 'phone'         => $row['phone'] ?? null,
                 'attachments' => $row["cv"] ?? null,
-                'recruiter_id'  => (int)$this->recruiterId,
+                'recruiter_id'  => $this->recruiterId,
                 'job_role_id'   => (int)$this->jobRoleId,
                 'processed'     => 0,
             ]);   
 
             $new_candidate->save();
 
-
            // create new pipeline here
-           // create Pipeline
             $new_pipeline = new Pipeline([
                 'job_role_id' => (int)$this->jobRoleId,
                 'intreview_id' => null,
@@ -69,6 +66,11 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
                 'global_stages' => 'applied', // Use plural: global_stages
                 'stage_id' => null, // null when in global stage
             ]);
+
+            // dispatch ingestion job
+            IngestCandidateToRag::dispatch($new_candidate->id);
+            
+
             $new_pipeline->save();
             return $new_candidate;
         }catch(Throwable $e){

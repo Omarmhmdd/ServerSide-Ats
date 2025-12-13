@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Candidate\Services\CandidateService;
 use App\Http\Requests\metaDataRequest;
-use App\Services\CandidateService;
 use Exception;
 use Log;
 
@@ -17,7 +17,6 @@ class CandidateController extends Controller
             return $this->errorResponse("Failed to save meta data for candidate" , 500 , ["1" => $ex->getMessage()]);
         }
     }
- 
 
     public function getCandidateData(){// for n8n for meta data creation
         try{
@@ -26,7 +25,17 @@ class CandidateController extends Controller
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get candidates data" . $ex->getMessage());
         }
+    } 
+
+    public function getMetaData(int $candidate_id){
+        try{
+            $meta_data = CandidateService::getMetaData($candidate_id);
+            return $this->successResponse($meta_data);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get candidates data", 500 , ["info" => $ex->getMessage()]);
+        }
     }
+
 
 
 }

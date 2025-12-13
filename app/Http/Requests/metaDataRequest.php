@@ -11,108 +11,95 @@ class metaDataRequest extends FormRequest
         return true;
     }
 
-    public function rules(): array
-    {
-        return [
-            '*.0.repositories' => 'nullable|array',
-            '*.0.repositories.*.name' => 'nullable|string',
-            '*.0.repositories.*.title' => 'nullable|string',
-            '*.0.repositories.*.description' => 'nullable|string',
-            '*.0.repositories.*.purpose' => 'nullable|string',
-            '*.0.repositories.*.technologies_used' => 'nullable|array',
-            '*.0.repositories.*.technologies_used.*' => 'string',
-            '*.0.repositories.*.last_updated' => 'nullable|date',
-            '*.0.repositories.*.stars' => 'nullable|integer',
-            '*.0.repositories.*.forks' => 'nullable|integer',
-            '*.0.detected_languages' => 'nullable|array',
-            '*.0.detected_languages.*' => 'string',
-            '*.0.detected_skills' => 'nullable|array',
-            '*.0.detected_skills.*' => 'string',
-            '*.0.overall_technical_summary' => 'nullable|string',
+public function rules(): array {
+    return [
 
-            '*.1.profile_info' => 'nullable|array',
-            '*.1.profile_info.full_name' => 'nullable|string',
-            '*.1.profile_info.headline' => 'nullable|string',
-            '*.1.profile_info.about' => 'nullable|string',
-            '*.1.profile_info.profile_picture_url' => 'nullable|url',
-            '*.1.profile_info.location' => 'nullable|string',
-            '*.1.profile_info.current_position' => 'nullable|string',
-            '*.1.profile_info.current_company' => 'nullable|string',
-            '*.1.profile_info.total_experience_years' => 'nullable|numeric',
-            '*.1.experience' => 'nullable|array',
-            '*.1.experience.*.title' => 'nullable|string',
-            '*.1.experience.*.company' => 'nullable|string',
-            '*.1.experience.*.employment_type' => 'nullable|string',
-            '*.1.experience.*.location' => 'nullable|string',
-            '*.1.experience.*.start_date' => 'nullable|date',
-            '*.1.experience.*.end_date' => 'nullable|date',
-            '*.1.experience.*.duration' => 'nullable|string',
-            '*.1.experience.*.description' => 'nullable|string',
-            '*.1.experience.*.skills_used' => 'nullable|array',
-            '*.1.experience.*.skills_used.*' => 'string',
-            '*.1.education' => 'nullable|array',
-            '*.1.education.*.school' => 'nullable|string',
-            '*.1.education.*.degree' => 'nullable|string',
-            '*.1.education.*.field_of_study' => 'nullable|string',
-            '*.1.education.*.start_date' => 'nullable|date',
-            '*.1.education.*.end_date' => 'nullable|date',
-            '*.1.education.*.grade' => 'nullable|string',
-            '*.1.education.*.activities' => 'nullable|string',
-            '*.1.skills' => 'nullable|array',
-            '*.1.skills.*' => 'string',
-            '*.1.certifications' => 'nullable|array',
-            '*.1.certifications.*.name' => 'nullable|string',
-            '*.1.certifications.*.issuing_organization' => 'nullable|string',
-            '*.1.certifications.*.issue_date' => 'nullable|date',
-            '*.1.certifications.*.expiration_date' => 'nullable|date',
-            '*.1.certifications.*.credential_id' => 'nullable|string',
-            '*.1.certifications.*.credential_url' => 'nullable|url',
-            '*.1.projects' => 'nullable|array',
-            '*.1.projects.*.title' => 'nullable|string',
-            '*.1.projects.*.description' => 'nullable|string',
-            '*.1.projects.*.start_date' => 'nullable|date',
-            '*.1.projects.*.end_date' => 'nullable|date',
-            '*.1.projects.*.skills_used' => 'nullable|array',
-            '*.1.projects.*.skills_used.*' => 'string',
-            '*.1.projects.*.project_url' => 'nullable|url',
-            '*.1.languages' => 'nullable|array',
-            '*.1.languages.*.language' => 'nullable|string',
-            '*.1.languages.*.proficiency' => 'nullable|string',
-            '*.1.volunteering' => 'nullable|array',
-            '*.1.volunteering.*.role' => 'nullable|string',
-            '*.1.volunteering.*.organization' => 'nullable|string',
-            '*.1.volunteering.*.start_date' => 'nullable|date',
-            '*.1.volunteering.*.end_date' => 'nullable|date',
-            '*.1.volunteering.*.cause' => 'nullable|string',
-            '*.1.volunteering.*.description' => 'nullable|string',
-            '*.1.achievements.honors_awards' => 'nullable|array',
-            '*.1.achievements.honors_awards.*' => 'string',
-            '*.1.achievements.publications' => 'nullable|array',
-            '*.1.achievements.publications.*' => 'string',
-            '*.1.achievements.patents' => 'nullable|array',
-            '*.1.achievements.patents.*' => 'string',
+        // TOP LEVEL
+        'meta_data' => 'required|array',
+        'meta_data.*.json' => 'required|array',
 
-            '*.2.personal_info' => 'nullable|array',
-            '*.2.personal_info.full_name' => 'nullable|string',
-            '*.2.personal_info.email' => 'nullable|email',
-            '*.2.personal_info.phone' => 'nullable|string',
-            '*.2.personal_info.address' => 'nullable|string',
-            '*.2.personal_info.linkedin_url' => 'nullable|url',
-            '*.2.personal_info.github_url' => 'nullable|url',
-            '*.2.personal_info.portfolio_url' => 'nullable|url',
-            '*.2.summary' => 'nullable|string',
-            
-            '*.2.work_experience' => 'nullable|array',
-            '*.2.work_experience.*.title' => 'nullable|string',
-            '*.2.work_experience.*.company' => 'nullable|string',
-            '*.2.work_experience.*.location' => 'nullable|string',
-            '*.2.work_experience.*.start_date' => 'nullable|date',
-            '*.2.work_experience.*.end_date' => 'nullable|date',
-            '*.2.work_experience.*.duration' => 'nullable|string',
-            '*.2.work_experience.*.responsibilities' => 'nullable|string',
-            '*.2.work_experience.*.achievements' => 'nullable|string',
-            '*.2.work_experience.*.skills_used' => 'nullable|array',
-            '*.2.work_experience.*.skills_used.*' => 'string',
-        ];
-    }
+        // CANDIDATE ID
+        'meta_data.*.json.candidate_id' => 'required|integer',
+
+        // REPOSITORIES
+        'meta_data.*.json.repositories' => 'nullable|array',
+        'meta_data.*.json.repositories.repositories' => 'nullable|array',
+        'meta_data.*.json.repositories.repositories.*.name' => 'nullable|string',
+        'meta_data.*.json.repositories.repositories.*.title' => 'nullable|string',
+        'meta_data.*.json.repositories.repositories.*.description' => 'nullable|string',
+        'meta_data.*.json.repositories.repositories.*.purpose' => 'nullable|string',
+        'meta_data.*.json.repositories.repositories.*.technologies_used' => 'nullable|array',
+        'meta_data.*.json.repositories.repositories.*.technologies_used.*' => 'string',
+        'meta_data.*.json.repositories.repositories.*.last_updated' => 'nullable|string',
+        'meta_data.*.json.repositories.repositories.*.stars' => 'nullable|integer',
+        'meta_data.*.json.repositories.repositories.*.forks' => 'nullable|integer',
+
+        // PERSONAL INFO
+        'meta_data.*.json.personal_info' => 'nullable|array',
+        'meta_data.*.json.personal_info.personal_info.full_name' => 'nullable|string',
+        'meta_data.*.json.personal_info.personal_info.email' => 'nullable|string',
+        'meta_data.*.json.personal_info.personal_info.phone' => 'nullable|string',
+        'meta_data.*.json.personal_info.personal_info.address' => 'nullable|string',
+        'meta_data.*.json.personal_info.personal_info.linkedin_url' => 'nullable|string',
+        'meta_data.*.json.personal_info.personal_info.github_url' => 'nullable|string',
+        'meta_data.*.json.personal_info.personal_info.portfolio_url' => 'nullable|string',
+
+        'meta_data.*.json.personal_info.summary' => 'nullable|string',
+
+        // WORK EXPERIENCE
+        'meta_data.*.json.personal_info.work_experience' => 'nullable|array',
+        'meta_data.*.json.personal_info.work_experience.*.title' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.company' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.location' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.start_date' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.end_date' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.duration' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.responsibilities' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.achievements' => 'nullable|string',
+        'meta_data.*.json.personal_info.work_experience.*.skills_used' => 'nullable|array',
+        'meta_data.*.json.personal_info.work_experience.*.skills_used.*' => 'string',
+
+        // EDUCATION
+        'meta_data.*.json.personal_info.education' => 'nullable|array',
+        'meta_data.*.json.personal_info.education.*.school' => 'nullable|string',
+        'meta_data.*.json.personal_info.education.*.degree' => 'nullable|string',
+        'meta_data.*.json.personal_info.education.*.field_of_study' => 'nullable|string',
+        'meta_data.*.json.personal_info.education.*.start_date' => 'nullable|string',
+        'meta_data.*.json.personal_info.education.*.end_date' => 'nullable|string',
+        'meta_data.*.json.personal_info.education.*.grade' => 'nullable|string',
+        'meta_data.*.json.personal_info.education.*.activities' => 'nullable|string',
+
+        // SKILLS
+        'meta_data.*.json.personal_info.skills' => 'nullable|array',
+        'meta_data.*.json.personal_info.skills.*' => 'string',
+
+        // CERTIFICATIONS
+        'meta_data.*.json.personal_info.certifications' => 'nullable|array',
+        'meta_data.*.json.personal_info.certifications.*.name' => 'nullable|string',
+        'meta_data.*.json.personal_info.certifications.*.issuing_organization' => 'nullable|string',
+        'meta_data.*.json.personal_info.certifications.*.issue_date' => 'nullable|string',
+
+        // PROJECTS
+        'meta_data.*.json.personal_info.projects' => 'nullable|array',
+        'meta_data.*.json.personal_info.projects.*.title' => 'nullable|string',
+        'meta_data.*.json.personal_info.projects.*.description' => 'nullable|string',
+        'meta_data.*.json.personal_info.projects.*.start_date' => 'nullable|string',
+        'meta_data.*.json.personal_info.projects.*.end_date' => 'nullable|string',
+        'meta_data.*.json.personal_info.projects.*.skills_used' => 'nullable|array',
+        'meta_data.*.json.personal_info.projects.*.skills_used.*' => 'string',
+
+        // LANGUAGES
+        'meta_data.*.json.personal_info.languages' => 'nullable|array',
+        'meta_data.*.json.personal_info.languages.*.language' => 'nullable|string',
+        'meta_data.*.json.personal_info.languages.*.proficiency' => 'nullable|string',
+
+        // ACHIEVEMENTS
+        'meta_data.*.json.personal_info.achievements' => 'nullable|array',
+        'meta_data.*.json.personal_info.achievements.honors_awards' => 'nullable|array',
+        'meta_data.*.json.personal_info.achievements.honors_awards.*' => 'string',
+    ];
+}
+
+
+
 }

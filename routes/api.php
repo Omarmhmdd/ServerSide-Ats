@@ -7,7 +7,9 @@ use App\Http\Controllers\RecruiterController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\CandidateImportController;
+use App\Http\Controllers\GithubController;
 use App\Http\Controllers\InterviewController;
+use App\Http\Controllers\RagCopilotController;
 // use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\StageController;
@@ -46,6 +48,12 @@ Route::group(["prefix" => "v0.1"], function () {
         // CANDIDATES
         Route::group(["prefix" => "candidate"] , function(){
             Route::post("/import" , [CandidateImportController::class , "import"]);
+            Route::get('/getMetaData/{candidate_id}' , [CandidateController::class , 'getMetaData']);
+        });
+
+        // COPILOT
+        Route::group(["prefix" => "copilot"] , function(){
+            Route::post("/ask" , [RagCopilotController::class , "ask"]);
         });
 
         // INTERVIEW ROUTES
@@ -109,7 +117,7 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::post("/{id}/delete", [CustomStageController::class, "destroy"])->middleware("role:admin,recruiter");
     });
 
-        // TODO: Add routes for other modules
+        // TODO:  Add routes for other modules
         // Recruiter routes
         // Candidates routes
         // JOB ROLES routes
@@ -121,5 +129,6 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::get("/candidatesData" , [CandidateController::class , 'getCandidateData']);
         Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
         Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
+        // Route::get('/github/{username}' , [GithubController::class , 'analyze']);
     });
 });

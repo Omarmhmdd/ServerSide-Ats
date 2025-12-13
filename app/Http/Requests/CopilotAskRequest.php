@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CandidateImportForm extends FormRequest
+class CopilotAskRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -22,8 +22,8 @@ class CandidateImportForm extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|mimes:xlsx,xls,csv',
-            'job_role_id' => 'required|string'
+            'candidate_id' => 'required|integer|exists:candidates,id',
+            'question' => 'required|string|max:2000',
         ];
     }
 }

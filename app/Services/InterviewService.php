@@ -5,9 +5,9 @@ namespace App\Services;
 use App\Models\Candidate;
 use App\Models\Interview;
 use App\Models\JobRole;
-
 use App\Models\Pipeline;
 use Carbon\Carbon;
+use Exception;
 use Http;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -26,24 +26,43 @@ class InterviewService {
         $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids); 
         
         // move users in pipeline to next stage => screening
+
+        // send emails to about screening schedule
+        $payload = [
+            "emails" => $list_of_emails,
+            "interviews" => $list_of_interviews
+        ];
+        Http::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
         self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews); 
         
         return true;
     }
-    private static function getRequiredIds($list_of_emails){
-        $first_email = reset($list_of_emails);
-        $required_ids = Candidate::where('email' , $first_email)
-                        ->select([
-                            'job_role_id'
-                        ])->first();
+    private static function getRequiredIds(array $list_of_emails){
+        if (empty($list_of_emails)) {
+            throw new Exception("Empty list of emails");
+        }
 
-        // then get the hiring_manager_id of this job
-        $hiring_manager_id = JobRole::where('id' , $required_ids["job_role_id"])
-                                    ->select("hiring_manager_id")
-                                    ->first();
-        return[
-            ...$required_ids,
-            "hiring_manager_id" => $hiring_manager_id
+        $first_email = reset($list_of_emails);
+
+        $candidate = Candidate::where('email', $first_email)
+            ->select('job_role_id')
+            ->first();
+
+        if (!$candidate) {
+           throw new Exception("Candidate not found");
+        }
+
+        $jobRole = JobRoles::where('id', $candidate->job_role_id)
+            ->select('hiring_manager_id')
+            ->first();
+
+        if (!$jobRole) {
+            throw new Exception("Job role not found");
+        }
+
+        return [
+            'job_role_id' => $candidate->job_role_id,
+            'hiring_manager_id' => $jobRole->hiring_manager_id
         ];
     }
     private static function chooseNextBestSchedule($list_of_emails , $required_ids){
@@ -68,7 +87,7 @@ class InterviewService {
        
     }
     private static function getLastInterviewTime($hiring_manager_id){
-         return Interview::where('intreveiwer_id', $hiring_manager_id)
+         return Interview::where('interveiwer_id', $hiring_manager_id)
             ->orderBy('schedule', 'desc') 
             ->value('schedule');
     }
@@ -97,7 +116,7 @@ class InterviewService {
 
             $new_interview = new Interview([
                 'candidate_id'   => $candidate_id,
-                'intreveiwer_id' => $hiring_manager_id,
+                'interveiwer_id' => $hiring_manager_id,
                 'schedule'       => $next_interview_time,
                 'job_role_id' => $job_role_id,
                 'type' => 'screen',
