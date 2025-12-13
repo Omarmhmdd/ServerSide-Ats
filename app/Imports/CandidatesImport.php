@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Candidate;
+use App\Models\Pipeline;
 use IngestCandidateToRag;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -29,11 +30,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
-<<<<<<< HEAD
-    public function chunkSize(): int{
-=======
   public function chunkSize(): int{
->>>>>>> e29b71efd7c7959d60cd4942664193037134a514
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
 

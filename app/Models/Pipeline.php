@@ -22,7 +22,7 @@ class Pipeline extends Model
 
     public function jobRole()
     {
-        return $this->belongsTo(JobRoles::class, 'job_role_id');
+        return $this->belongsTo(JobRole::class, 'job_role_id');
     }
 
     public function interview()
@@ -40,10 +40,7 @@ class Pipeline extends Model
         return $this->belongsTo(CustomStage::class, 'stage_id');
     }
 
-    /**
-     * Get next stage in the pipeline order
-     * REQUIRED: Called by PipelineService::moveToNextStage() on line 190
-     */
+   
     public function getNextStage()
     {
         if ($this->global_stages === 'applied') {
@@ -81,10 +78,7 @@ class Pipeline extends Model
         return null; // Already at final state
     }
 
-    /**
-     * Check if candidate can be rejected
-     * REQUIRED: Called by PipelineService::rejectCandidate() on line 227
-     */
+    
     public function canReject(): bool
     {
         return $this->global_stages !== 'applied' 
@@ -92,19 +86,13 @@ class Pipeline extends Model
             && $this->global_stages !== 'rejected';
     }
 
-    /**
-     * Check if candidate can move to next stage
-     */
+    
     public function canMoveNext(): bool
     {
         $next = $this->getNextStage();
         return $next !== null && $next !== 'hired' && $next !== 'rejected';
     }
 
-    /**
-     * Check if candidate has completed all custom stages
-     * REQUIRED: Called by PipelineService::hireCandidate()
-     */
     public function hasCompletedAllCustomStages(): bool
     {
         if ($this->global_stages === 'hired' || $this->global_stages === 'rejected') {
