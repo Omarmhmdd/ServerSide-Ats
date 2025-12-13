@@ -18,6 +18,7 @@ Route::group(["prefix" => "v0.1"], function () {
     // UNPROTECTED ROUTES
     Route::post("/login" , [AuthController::class , "login"]);
     Route::post("/signup" , [AuthController::class , "register"]);
+    Route::post('/interviews/create_scorecard', [InterviewController::class, 'createScoreCard']);
 
     // AUTHENTICATED ROUTES
     // AUTHINTICATABLES
@@ -41,7 +42,7 @@ Route::group(["prefix" => "v0.1"], function () {
         // CANDIDATES
         // OFFERS
         // INTERVIEW
-    });
+
 
         // CANDIDATES
         Route::group(["prefix" => "candidate"] , function(){
@@ -54,6 +55,7 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/", [InterviewController::class, "index"]);
             Route::post("/", [InterviewController::class, "store"]);
             Route::get("/{id}", [InterviewController::class, "show"]);
+            Route::post("/{id}/complete", [InterviewController::class, "MarkAsComplete"]);
             Route::post("/{id}/update", [InterviewController::class, "update"]);
             Route::post("/{id}/delete", [InterviewController::class, "destroy"]);
             Route::get("/candidate/{candidateId}", [InterviewController::class, "getByCandidate"]);
@@ -121,5 +123,6 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::get("/candidatesData" , [CandidateController::class , 'getCandidateData']);
         Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
         Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
+    });
     });
 });

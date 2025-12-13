@@ -27,6 +27,7 @@ class JobRoleServices
     static function getRoles($id){
         if(!$id){
             $roles = DB::select('SELECT
+                job_roles.id,
                 recruiter.id AS recruiter_id,
                 recruiter.name AS recruiter_name,
                 levels.id AS level_id,
@@ -37,15 +38,19 @@ class JobRoleServices
                 job_roles.title,
                 job_roles.description,
                 job_roles.is_remote,
-                job_roles.is_on_site
+                job_roles.is_on_site,
+                job_skills.name,
+                job_skills.nice_to_have
             FROM job_roles
             INNER JOIN users AS recruiter ON job_roles.recruiter_id = recruiter.id
             INNER JOIN users AS manager ON job_roles.hiring_manager_id = manager.id
-            INNER JOIN levels ON job_roles.level_id = levels.id;');
+            INNER JOIN levels ON job_roles.level_id = levels.id
+            INNER JOIN job_skills ON job_roles.id  = job_skills.job_role_id;');
             return $roles;
         }
 
         $role = DB::select('SELECT
+                job_roles.id,
                 recruiter.id AS recruiter_id,
                 recruiter.name AS recruiter_name,
                 levels.id AS level_id,
@@ -56,11 +61,14 @@ class JobRoleServices
                 job_roles.title,
                 job_roles.description,
                 job_roles.is_remote,
-                job_roles.is_on_site
+                job_roles.is_on_site,
+                job_skills.name,
+                job_skills.nice_to_have
             FROM job_roles
             INNER JOIN users AS recruiter ON job_roles.recruiter_id = recruiter.id
             INNER JOIN users AS manager ON job_roles.hiring_manager_id = manager.id
-            INNER JOIN levels ON job_roles.level_id = levels.id WHERE job_roles.id = ?;',[$id]);
+            INNER JOIN levels ON job_roles.level_id = levels.id
+            INNER JOIN job_skills ON job_roles.id  = job_skills.job_role_id WHERE job_roles.id = ?;',[$id]);
         return $role;
     }
 

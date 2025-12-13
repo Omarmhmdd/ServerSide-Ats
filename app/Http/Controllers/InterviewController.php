@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AIRequest;
 use App\Http\Requests\StoreInterviewRequest;
 use App\Http\Requests\UpdateInterviewRequest;
 use App\Services\InterviewService;
@@ -15,7 +16,7 @@ class InterviewController extends Controller
 {
     public function createScreening($candidate_id){
         try{
-            $user_email = InterviewService::createScreening($candidate_id);
+            $user_email = InterviewService::createInterview($candidate_id);
             return $this->successResponse(["email" => $user_email]);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to create screening");
@@ -110,6 +111,35 @@ class InterviewController extends Controller
             return $this->errorResponse($e->getMessage(), 400);
         } catch (Exception $e) {
             return $this->errorResponse('Failed to update interview status', 500, ['error' => $e->getMessage()]);
+        }
+    }
+    public function MarkAsComplete($id){
+        try {
+
+            $interview = InterviewService::MarkAsComplete($id);
+
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('Interview not found', 404);
+        } catch (InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        } catch (Exception $e) {
+            return $this->errorResponse('Failed to complete interview', 500, ['error' => $e->getMessage()]);
+        }
+    }
+
+    public function saveAiSummary(AIRequest $request){
+
+        try {
+
+            $summary = InterviewService::saveAiSummary($request);
+            return $this->successResponse($summary);
+
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('Interview not found', 404);
+        } catch (InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        } catch (Exception $e) {
+            return $this->errorResponse('Failed to complete interview', 500, ['error' => $e->getMessage()]);
         }
     }
 }

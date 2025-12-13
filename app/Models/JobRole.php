@@ -11,7 +11,7 @@ class JobRole extends Model
      /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-
+    
     protected $fillable = [
         'recruiter_id',
         'level_id',
