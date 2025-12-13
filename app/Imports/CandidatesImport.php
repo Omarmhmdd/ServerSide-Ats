@@ -29,10 +29,10 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
-
     public function chunkSize(): int{
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
+
     public function model(array $row){
         try{
             $new_candidate =  new Candidate([
@@ -58,6 +58,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
 
             // dispatch ingestion job
             IngestCandidateToRag::dispatch($new_candidate->id);
+            
             return $new_candidate;
         }catch(Throwable $e){
             $this->onError($e);

@@ -16,7 +16,7 @@ class CandidateIngestionService{
 
     public function __construct(){
         $this->qdrant = new Client([
-            'base_url' => env('QDRANT_ENDPOINT_URL'),
+            'base_uri' => rtrim(env('QDRANT_ENDPOINT_URL') , '/'),
             'headers' => [
                 'api-key' => env('QDRANT_API_KEY'),
                 'Content-type' => 'application/json'
@@ -26,13 +26,13 @@ class CandidateIngestionService{
 
     public static function chunkText(string $text, int $size = 500){
         $chunks = [];
-        $length = strlen($text);
+        $length = mb_strlen($text, 'UTF-8');
+
         for ($i = 0; $i < $length; $i += $size) {
-            $chunks[] = substr($text, $i, $size);
+            $chunks[] = mb_substr($text, $i, $size, 'UTF-8');
         }
         return $chunks;
     }   
-
 
     public function ingest(int $candidateId){
         $candidate = Candidate::findOrFail($candidateId);
@@ -53,20 +53,21 @@ class CandidateIngestionService{
     protected function buildCVSource(Candidate $candidate){
         $sources = [];
         if(!$candidate->attachments){
-            return;
+            return [];
         }
     
         $cv_extractor = new CVExtractionService();
         $cvText = CandidateService::cleanUtf8($cv_extractor->extract($candidate->attachments));
 
         $splitter = new CVSectionSplitter();
-        $sections = $splitter->split($cvText);
-        foreach($sections as $section){
+        $sections = $splitter->split($cvText);// Summary/about, Skills, Education....
+
+        foreach($sections as $sectionName => $sectionText){
             $sources[] = [
                 'type' => 'cv_pdf',
                 'label' => 'CV',
-                'section' => ucfirst($section),
-                'text' => $cvText,
+                'section' => ucfirst($sectionName),
+                'text' => $sectionText,
             ];
         }
         return $sources;
@@ -94,7 +95,6 @@ class CandidateIngestionService{
             ]
         );
     }
-
 
     protected function ingestSource(int $candidateId,string $text,string $sourceType,string $sourceLabel , string $sourceSection = "General" , array $extraPayload = []){
         $chunks = $this->chunkText($text);
@@ -148,13 +148,4 @@ class CandidateIngestionService{
 
         return ! empty($data['result']['points']);
     }
-
-
-
-
-
-
-
-
-
 }

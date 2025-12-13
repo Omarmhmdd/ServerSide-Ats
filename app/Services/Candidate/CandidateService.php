@@ -6,6 +6,13 @@ use App\CV\Services\CVExtractionService;
 use App\Models\Candidate;
 use App\Services\GitHubService;
 use App\Services\InterviewService;
+use App\Services\MetaDataService\CertificationMetaData;
+use App\Services\MetaDataService\DetectedLanguagesMetaData;
+use App\Services\MetaDataService\DetectedSkillsMetaData;
+use App\Services\MetaDataService\EducationMetaData;
+use App\Services\MetaDataService\MetaDataService;
+use App\Services\MetaDataService\ProjectMetaData;
+use App\Services\MetaDataService\RepositoryMetaData;
 use Exception;
 
 class CandidateService{
@@ -21,6 +28,27 @@ class CandidateService{
         }
 
         self::scheduleScreening($allMetaData);
+    }
+
+    public static function getMetaData(int $candidate_id){
+        Candidate::firstOrFail($candidate_id);
+
+        $domains = [
+            "repositories" => RepositoryMetaData::class,
+            "projects" => ProjectMetaData::class,
+            "education" => EducationMetaData::class,
+            "detected_skills" => DetectedLanguagesMetaData::class,
+            "detected_languages" => DetectedSkillsMetaData::class,
+            "cerifications" => CertificationMetaData::class
+        ];
+
+        $meta_data = [];
+        foreach($domains as $domain => $model_class){
+            $meta_data_service = new MetaDataService(new $model_class);
+            $meta_data[$domain] = $meta_data_service->get($candidate_id);
+        }
+
+        return $meta_data;
     }
 
     private static function scheduleScreening($allMetaData){

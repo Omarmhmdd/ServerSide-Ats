@@ -82,6 +82,7 @@ class RagQueryService
     }
 
     public function answer(int $candidateId, string $question){
+        
         $normalizedQuestion = $this->query_normalizer->normalize($question);
         $queryVector = $this->embed($normalizedQuestion);
         $chunks = $this->retrieve($candidateId, $queryVector);

@@ -25,10 +25,17 @@ class CandidateController extends Controller
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get candidates data" . $ex->getMessage());
         }
+    } 
+
+    public function getMetaData(int $candidate_id){
+        try{
+            $meta_data = CandidateService::getMetaData($candidate_id);
+            return $this->successResponse($meta_data);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get candidates data", 500 , ["info" => $ex->getMessage()]);
+        }
     }
 
-
-    
 
 
 }

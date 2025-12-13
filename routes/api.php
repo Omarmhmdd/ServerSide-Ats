@@ -22,6 +22,7 @@ Route::group(["prefix" => "v0.1"], function () {
         // CANDIDATES
         Route::group(["prefix" => "candidate"] , function(){
             Route::post("/import" , [CandidateImportController::class , "import"]);
+            Route::get('/getMetaData/{candidate_id}' , [CandidateController::class , 'getMetaData']);
         });
 
         // COPILOT
@@ -86,6 +87,6 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::get("/candidatesData" , [CandidateController::class , 'getCandidateData']);
         Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
         Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
-        Route::get('/github/{username}' , [GithubController::class , 'analyze']);
+        // Route::get('/github/{username}' , [GithubController::class , 'analyze']);
     });
 });

@@ -12,6 +12,9 @@ class IngestCandidateToRag implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 3;
+    public int $timeout = 120;// protect against openAI timeouts
+
     public int $candidateId;
 
     public function __construct(int $candidateId)
