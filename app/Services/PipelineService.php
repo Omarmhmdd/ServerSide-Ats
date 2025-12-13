@@ -1,11 +1,15 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\CustomStage;
 use App\Models\Pipeline;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\JobRoles;
+use App\Models\User;
 
 class PipelineService
 {
@@ -17,11 +21,97 @@ class PipelineService
         //
     }
 
+    /**
+     * Check if user can access pipeline based on role
+     */
+    private function canAccessPipeline(Pipeline $pipeline): bool
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // Load role relationship if not already loaded
+        if (!isset($user->role)) {
+            $user->load('role');
+        }
+        
+        // Admin can access everything
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        // Recruiter can only access their own job roles
+        if ($user->isRecruiter()) {
+            // Load jobRole relationship if not loaded
+            if (!isset($pipeline->jobRole)) {
+                $pipeline->load('jobRole');
+            }
+            
+            // Check if jobRole exists and belongs to recruiter
+            if (!$pipeline->jobRole) {
+                return false;
+            }
+            
+            return $pipeline->jobRole->recruiter_id === $user->id;
+        }
+        
+        // Interviewer can view pipelines (read-only)
+        return true;
+    }
+
+    /**
+     * Get job role IDs that belong to the current recruiter
+     */
+    private function getRecruiterJobRoleIds(): array
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        
+        if (!$user) {
+            return [];
+        }
+        
+        // Load role relationship if not already loaded
+        if (!isset($user->role)) {
+            $user->load('role');
+        }
+        
+        if (!$user->isRecruiter()) {
+            return [];
+        }
+        
+        return JobRoles::where('recruiter_id', $user->id)
+            ->pluck('id')
+            ->toArray();
+    }
+
     public function getAllPipelines(): Collection
     {
-        return Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
-            ->latest()
-            ->get();
+        $user = Auth::user();
+        
+        $query = Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview']);
+        
+        // Filter by recruiter's job roles if not admin
+        if ($user) {
+            /** @var \App\Models\User $user */
+            if (!isset($user->role)) {
+                $user->load('role');
+            }
+            
+            if ($user->isRecruiter()) {
+                $jobRoleIds = $this->getRecruiterJobRoleIds();
+                if (!empty($jobRoleIds)) {
+                    $query->whereIn('job_role_id', $jobRoleIds);
+                } else {
+                    return $query->whereRaw('1 = 0')->get();
+                }
+            }
+        }
+        
+        return $query->latest()->get();
     }
 
     /**
@@ -33,6 +123,11 @@ class PipelineService
             ->find($id);
 
         if (!$pipeline) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
             throw new ModelNotFoundException('Pipeline entry not found');
         }
 
@@ -72,7 +167,7 @@ class PipelineService
         }
         
         // Ensure stage_id is null when in global stage
-        if (isset($data['global_stages']) && in_array($data['global_stages'], ['applied', 'screen','offer', 'hired', 'rejected'])) {
+        if (isset($data['global_stages']) && in_array($data['global_stages'], ['applied', 'screen', 'offer', 'hired', 'rejected'])) {
             $data['stage_id'] = null;
         }
         
@@ -92,7 +187,11 @@ class PipelineService
         if (!$pipeline) {
             throw new ModelNotFoundException('Pipeline entry not found');
         }
-      
+
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
 
         $pipeline->update($data);
         $pipeline->load(['jobRole', 'candidate', 'customStage', 'interview']);
@@ -111,6 +210,11 @@ class PipelineService
             throw new ModelNotFoundException('Pipeline entry not found');
         }
 
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
         return $pipeline->delete();
     }
 
@@ -119,6 +223,23 @@ class PipelineService
      */
     public function getPipelinesByJobRole(int $jobRoleId): Collection
     {
+        $user = Auth::user();
+        
+        // Check if job role belongs to recruiter
+        if ($user) {
+            /** @var \App\Models\User $user */
+            if (!isset($user->role)) {
+                $user->load('role');
+            }
+            
+            if ($user->isRecruiter()) {
+                $jobRole = JobRoles::find($jobRoleId);
+                if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
+                    throw new ModelNotFoundException('Job role not found');
+                }
+            }
+        }
+        
         return Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
             ->where('job_role_id', $jobRoleId)
             ->latest()
@@ -130,10 +251,29 @@ class PipelineService
      */
     public function getPipelinesByCandidate(int $candidateId): Collection
     {
-        return Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
-            ->where('candidate_id', $candidateId)
-            ->latest()
-            ->get();
+        $user = Auth::user();
+        
+        $query = Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
+            ->where('candidate_id', $candidateId);
+        
+        // Filter by recruiter's job roles if not admin
+        if ($user) {
+            /** @var \App\Models\User $user */
+            if (!isset($user->role)) {
+                $user->load('role');
+            }
+            
+            if ($user->isRecruiter()) {
+                $jobRoleIds = $this->getRecruiterJobRoleIds();
+                if (!empty($jobRoleIds)) {
+                    $query->whereIn('job_role_id', $jobRoleIds);
+                } else {
+                    return $query->whereRaw('1 = 0')->get();
+                }
+            }
+        }
+        
+        return $query->latest()->get();
     }
 
     /**
@@ -141,10 +281,68 @@ class PipelineService
      */
     public function getPipelinesByStage(int $stageId): Collection
     {
-        return Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
-            ->where('stage_id', $stageId)
-            ->latest()
-            ->get();
+        $user = Auth::user();
+        
+        // Get the custom stage to check job role
+        $customStage = CustomStage::find($stageId);
+        if (!$customStage) {
+            return $query->whereRaw('1 = 0')->get();
+        }
+        
+        $query = Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
+            ->where('stage_id', $stageId);
+        
+        // Filter by recruiter's job roles if not admin
+        if ($user) {
+            /** @var \App\Models\User $user */
+            if (!isset($user->role)) {
+                $user->load('role');
+            }
+            
+            if ($user->isRecruiter()) {
+                $jobRoleIds = $this->getRecruiterJobRoleIds();
+                if (!empty($jobRoleIds)) {
+                    $query->whereIn('job_role_id', $jobRoleIds);
+                } else {
+                    return $query->whereRaw('1 = 0')->get();
+                }
+            }
+        }
+        
+        return $query->latest()->get();
+    }
+
+    /**
+     * Move candidate to a specific custom stage
+     */
+    public function moveCandidateToStage(int $id, int $stageId): Pipeline
+    {
+        $pipeline = Pipeline::find($id);
+
+        if (!$pipeline) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
+        // Verify the stage exists and belongs to the same job role
+        $customStage = CustomStage::where('id', $stageId)
+            ->where('job_role_id', $pipeline->job_role_id)
+            ->first();
+
+        if (!$customStage) {
+            throw new ModelNotFoundException('Custom stage not found for this job role');
+        }
+
+        $pipeline->update([
+            'global_stages' => null, // In custom stage
+            'stage_id' => $stageId,
+        ]);
+
+        return $pipeline->fresh(['jobRole', 'candidate', 'customStage', 'interview']);
     }
 
     /**
@@ -158,6 +356,11 @@ class PipelineService
             throw new ModelNotFoundException('Pipeline entry not found');
         }
 
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
         $next = $pipeline->getNextStage();
 
         if (!$next) {
@@ -168,9 +371,9 @@ class PipelineService
             $pipeline->update([
                 'global_stages' => 'screen',
                 'stage_id' => null,
-            ]);}
-            elseif ($next === 'offer') {
-                $pipeline->update([
+            ]);
+        } elseif ($next === 'offer') {
+            $pipeline->update([
                 'global_stages' => 'offer',
                 'stage_id' => null,
             ]);
@@ -200,6 +403,11 @@ class PipelineService
             throw new ModelNotFoundException('Pipeline entry not found');
         }
 
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
         if (!$pipeline->canReject()) {
             throw new \RuntimeException('Cannot reject candidate. Candidate must be in screen stage or above.');
         }
@@ -223,6 +431,11 @@ class PipelineService
             throw new ModelNotFoundException('Pipeline entry not found');
         }
 
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
         // Check if candidate has completed all custom stages
         if (!$pipeline->hasCompletedAllCustomStages() && $pipeline->stage_id) {
             throw new \RuntimeException('Cannot hire candidate. Must complete all custom stages first.');
@@ -241,6 +454,23 @@ class PipelineService
      */
     public function getPipelineStatistics(int $jobRoleId): array
     {
+        $user = Auth::user();
+        
+        // Check if job role belongs to recruiter
+        if ($user) {
+            /** @var \App\Models\User $user */
+            if (!isset($user->role)) {
+                $user->load('role');
+            }
+            
+            if ($user->isRecruiter()) {
+                $jobRole = JobRoles::find($jobRoleId);
+                if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
+                    throw new ModelNotFoundException('Job role not found');
+                }
+            }
+        }
+        
         // Get all pipelines for this job role
         $pipelines = Pipeline::where('job_role_id', $jobRoleId)->get();
         
@@ -252,7 +482,7 @@ class PipelineService
         $statistics = [];
         
         // Add global stages
-        $globalStages = ['applied', 'screen','offer', 'hired', 'rejected'];
+        $globalStages = ['applied', 'screen', 'offer', 'hired', 'rejected'];
         foreach ($globalStages as $globalStage) {
             $count = $pipelines->where('global_stages', $globalStage)->count();
             $statistics[] = [
@@ -282,6 +512,23 @@ class PipelineService
      */
     public function getKanbanBoard(int $jobRoleId): array
     {
+        $user = Auth::user();
+        
+        // Check if job role belongs to recruiter
+        if ($user) {
+            /** @var \App\Models\User $user */
+            if (!isset($user->role)) {
+                $user->load('role');
+            }
+            
+            if ($user->isRecruiter()) {
+                $jobRole = JobRoles::find($jobRoleId);
+                if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
+                    throw new ModelNotFoundException('Job role not found');
+                }
+            }
+        }
+        
         $pipelines = Pipeline::where('job_role_id', $jobRoleId)
             ->with(['candidate', 'interview', 'customStage'])
             ->get();
@@ -311,8 +558,6 @@ class PipelineService
                 ->values()
                 ->toArray(),
         ];
-
-        
         
         // Custom stages columns
         foreach ($customStages as $stage) {
@@ -327,6 +572,7 @@ class PipelineService
                     ->toArray(),
             ];
         }
+        
         // Offer column
         $kanban[] = [
             'stage_type' => 'global',
@@ -374,4 +620,7 @@ class PipelineService
         ];
     }
 }
+
+
+
 

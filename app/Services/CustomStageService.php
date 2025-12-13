@@ -1,13 +1,76 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\CustomStage;
 use App\Models\JobRoles;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
+
 class CustomStageService
 {
-     public function getStagesForJobRole(int $jobRoleId): Collection
+    /**
+     * Check if user can access job role based on role
+     */
+    private function canAccessJobRole(JobRoles $jobRole): bool
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // Load role relationship if not already loaded
+        if (!isset($user->role)) {
+            $user->load('role');
+        }
+        
+        // Admin can access everything
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        // Recruiter can only access their own job roles
+        if ($user->isRecruiter()) {
+            return $jobRole->recruiter_id === $user->id;
+        }
+        
+        // Interviewer can view custom stages (read-only)
+        return true;
+    }
+
+    /**
+     * Get job role IDs that belong to the current recruiter
+     */
+    private function getRecruiterJobRoleIds(): array
+    {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        
+        if (!$user) {
+            return [];
+        }
+        
+        // Load role relationship if not already loaded
+        if (!isset($user->role)) {
+            $user->load('role');
+        }
+        
+        if (!$user->isRecruiter()) {
+            return [];
+        }
+        
+        return JobRoles::where('recruiter_id', $user->id)
+            ->pluck('id')
+            ->toArray();
+    }
+
+    /**
+     * Get all custom stages for a job role
+     */
+    public function getStagesForJobRole(int $jobRoleId): Collection
     {
         $jobRole = JobRoles::find($jobRoleId);
         
@@ -15,15 +78,27 @@ class CustomStageService
             throw new ModelNotFoundException('Job role not found');
         }
 
+        // Check access permission
+        if (!$this->canAccessJobRole($jobRole)) {
+            throw new ModelNotFoundException('Job role not found');
+        }
+
         return $jobRole->customStages;
     }
 
-    
+    /**
+     * Create a custom stage for a job role
+     */
     public function createStage(int $jobRoleId, string $name, int $order): CustomStage
     {
         $jobRole = JobRoles::find($jobRoleId);
         
         if (!$jobRole) {
+            throw new ModelNotFoundException('Job role not found');
+        }
+
+        // Check access permission
+        if (!$this->canAccessJobRole($jobRole)) {
             throw new ModelNotFoundException('Job role not found');
         }
 
@@ -46,12 +121,24 @@ class CustomStageService
         ]);
     }
 
-    
+    /**
+     * Update a custom stage
+     */
     public function updateStage(int $id, array $data): CustomStage
     {
         $stage = CustomStage::find($id);
         
         if (!$stage) {
+            throw new ModelNotFoundException('Custom stage not found');
+        }
+
+        // Load job role relationship
+        if (!isset($stage->jobRole)) {
+            $stage->load('jobRole');
+        }
+
+        // Check access permission
+        if (!$stage->jobRole || !$this->canAccessJobRole($stage->jobRole)) {
             throw new ModelNotFoundException('Custom stage not found');
         }
 
@@ -64,12 +151,24 @@ class CustomStageService
         return $stage->fresh();
     }
 
-    
+    /**
+     * Delete a custom stage
+     */
     public function deleteStage(int $id): bool
     {
         $stage = CustomStage::find($id);
         
         if (!$stage) {
+            throw new ModelNotFoundException('Custom stage not found');
+        }
+
+        // Load job role relationship
+        if (!isset($stage->jobRole)) {
+            $stage->load('jobRole');
+        }
+
+        // Check access permission
+        if (!$stage->jobRole || !$this->canAccessJobRole($stage->jobRole)) {
             throw new ModelNotFoundException('Custom stage not found');
         }
 
@@ -94,12 +193,19 @@ class CustomStageService
         return $deleted;
     }
 
-   
+    /**
+     * Reorder stages for a job role
+     */
     public function reorderStages(int $jobRoleId, array $stageOrders): void
     {
         $jobRole = JobRoles::find($jobRoleId);
         
         if (!$jobRole) {
+            throw new ModelNotFoundException('Job role not found');
+        }
+
+        // Check access permission
+        if (!$this->canAccessJobRole($jobRole)) {
             throw new ModelNotFoundException('Job role not found');
         }
 
@@ -110,7 +216,9 @@ class CustomStageService
         }
     }
 
-    
+    /**
+     * Reorder a single stage
+     */
     private function reorderStage(CustomStage $stage, int $newOrder): void
     {
         $oldOrder = $stage->order;
@@ -131,6 +239,3 @@ class CustomStageService
         }
     }
 }
-
-
-
