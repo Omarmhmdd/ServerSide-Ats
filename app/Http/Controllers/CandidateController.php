@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Candidate\Services\CandidateService;
+use App\Services\Candidate\CandidateService;
 use App\Http\Requests\metaDataRequest;
 use Exception;
 use Log;

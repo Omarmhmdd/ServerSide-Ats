@@ -22,14 +22,11 @@ Route::group(["prefix" => "v0.1"], function () {
     Route::post("/signup" , [AuthController::class , "register"]);
 
     // AUTHENTICATED ROUTES
-    // AUTHINTICATABLES
     Route::group(["prefix"=>"auth" , "middleware" => "auth:api"] , function(){
         Route::get("/recruiters", [RecruiterController::class,"getRecruiters"]);
         Route::get("/hiring_managers", [HiringManagerController::class,"getHiringManagers"]);
 
 
-        // Recruiter
-        // Candidates
         // JOB ROLES
         Route::group(["prefix"=>"job_roles"] , function(){
             Route::get("/levels", [JobRoleController::class,"getLevels"]);
@@ -37,19 +34,13 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::post("/add_update_job_role", [JobRoleController::class,"addOrUpdateJobRole"]);
             Route::post("/delete_role/{id?}", [JobRoleController::class,"deleteJobRole"]);
         });
-
-        // PIPELINE
-        // N8N
-        // CANDIDATES
-        // OFFERS
-        // INTERVIEW
-    });
-
+        
         // CANDIDATES
         Route::group(["prefix" => "candidate"] , function(){
             Route::post("/import" , [CandidateImportController::class , "import"]);
             Route::get('/getMetaData/{candidate_id}' , [CandidateController::class , 'getMetaData']);
         });
+    });
 
         // COPILOT
         Route::group(["prefix" => "copilot"] , function(){
@@ -57,7 +48,6 @@ Route::group(["prefix" => "v0.1"], function () {
         });
 
         // INTERVIEW ROUTES
-        // All authenticated users can access interviews
         Route::prefix("interviews")->group(function () {
             Route::get("/", [InterviewController::class, "index"]);
             Route::post("/", [InterviewController::class, "store"]);

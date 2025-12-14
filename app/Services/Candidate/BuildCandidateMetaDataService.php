@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Candidate\Services;
+namespace App\Services\Candidate;
 
 use App\Models\Candidate;
 use DB;

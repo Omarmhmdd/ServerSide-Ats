@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Candidate\Services;
+namespace App\Services\Candidate;
 
 use App\Imports\CandidatesImport;
 use Maatwebsite\Excel\Facades\Excel;

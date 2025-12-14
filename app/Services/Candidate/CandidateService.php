@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Candidate\Services;
+namespace App\Services\Candidate;
 
-use App\CV\Services\CVExtractionService;
+use App\Services\Candidate\BuildCandidateMetaDataService;
+use App\Services\CV\CVExtractionService;
 use App\Models\Candidate;
 use App\Services\GitHubService;
 use App\Services\InterviewService;
+
 use App\Services\MetaDataService\CertificationMetaData;
 use App\Services\MetaDataService\DetectedLanguagesMetaData;
 use App\Services\MetaDataService\DetectedSkillsMetaData;

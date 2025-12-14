@@ -3,8 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Interview;
-use IngestCandidateToRag;
-use IngestInterviewNotesToRag;
+use App\Jobs\IngestInterviewNotesToRag;
 
 class InterviewObserver{
     /**

@@ -41,8 +41,7 @@ class CustomStageService
     }
 
     
-    private function getRecruiterJobRoleIds(): array
-    {
+    private function getRecruiterJobRoleIds(): array{
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
         
@@ -65,7 +64,7 @@ class CustomStageService
     }
 
     
-    public function getStagesForJobRole(int $jobRoleId): Collection
+    public function getStagesForJobRole(int $jobRoleId)
     {
         $jobRole = JobRole::find($jobRoleId);
         

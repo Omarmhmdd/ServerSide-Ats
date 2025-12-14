@@ -2,8 +2,10 @@
 
 namespace App\Imports;
 
+use App\Jobs\IngestCandidateToRag;
 use App\Models\Candidate;
-use IngestCandidateToRag;
+use App\Models\Pipeline;
+
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -54,21 +56,21 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
 
             $new_candidate->save();
 
-           // create new pipeline here
+           // create new pipeline 
             $new_pipeline = new Pipeline([
                 'job_role_id' => (int)$this->jobRoleId,
                 'intreview_id' => null,
                 'candidate_id' => $new_candidate->id,
-                'global_stages' => 'applied', // Use plural: global_stages
-                'stage_id' => null, // null when in global stage
+                'global_stages' => 'applied', 
+                'custom_stage_id' => null, // null when in global stage
             ]);
+            $new_pipeline->save();
 
             // dispatch ingestion job
             IngestCandidateToRag::dispatch($new_candidate->id);
             
-
-            $new_pipeline->save();
             return $new_candidate;
+
         }catch(Throwable $e){
             $this->onError($e);
             return null; // skip this row and keep going

@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Candidate\Services;
+namespace App\Services\Candidate;
 
-use App\CV\Services\CVExtractionService;
-use App\CV\Services\CVSectionSplitter;
+use App\Services\Candidate\CandidateService;
+use App\Services\CV\CVExtractionService;
+use App\Services\CV\CVSectionSplitter;
 use App\Models\Candidate;
 use App\Models\Interview;
 use GuzzleHttp\Client;
-use OpenAI;
-use Str;
+use OpenAI\Laravel\Facades\OpenAI;
+use Illuminate\Support\Str;
 
 class CandidateIngestionService{
 
@@ -21,7 +22,7 @@ class CandidateIngestionService{
                 'api-key' => env('QDRANT_API_KEY'),
                 'Content-type' => 'application/json'
             ]
-            ]);
+        ]);
     }
 
     public static function chunkText(string $text, int $size = 500){
@@ -36,6 +37,7 @@ class CandidateIngestionService{
 
     public function ingest(int $candidateId){
         $candidate = Candidate::findOrFail($candidateId);
+
 
         $sources = $this->buildCVSource($candidate);
 
@@ -55,6 +57,7 @@ class CandidateIngestionService{
         if(!$candidate->attachments){
             return [];
         }
+
     
         $cv_extractor = new CVExtractionService();
         $cvText = CandidateService::cleanUtf8($cv_extractor->extract($candidate->attachments));
@@ -76,7 +79,7 @@ class CandidateIngestionService{
     public function ingestInterviewNotes(int $interviewId): void{
         $interview = Interview::findOrFail($interviewId);
 
-        if (! $interview->notes) {
+        if (! $interview->notes || $interview->notes === ""){ // fail silently
             return;
         }
 
@@ -88,7 +91,7 @@ class CandidateIngestionService{
             candidateId: $interview->candidate_id,
             text: $interview->notes,
             sourceType: 'interview_notes',
-            sourceLabel: 'Interview : ' . $interview->name,
+            sourceLabel: 'Interview : ' . $interview->type,
             sourceSection : 'Interview notes',
             extraPayload: [
                 'interview_id' => $interviewId
@@ -98,7 +101,7 @@ class CandidateIngestionService{
 
     protected function ingestSource(int $candidateId,string $text,string $sourceType,string $sourceLabel , string $sourceSection = "General" , array $extraPayload = []){
         $chunks = $this->chunkText($text);
-
+       
         $points = [];
 
         foreach ($chunks as $i => $chunk) {
@@ -109,7 +112,7 @@ class CandidateIngestionService{
 
             $points[] = [
                 'id' => (string) Str::uuid(),
-                'vector' => $embedding->data[0]->embedding,
+                'vector' => $embedding->embeddings[0]->embedding,
                 'payload' => array_merge([
                     'candidate_id' => $candidateId,
                     'source_type' => $sourceType,
