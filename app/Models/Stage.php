@@ -16,10 +16,7 @@ class Stage extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-     public function pipelines()
-    {
-        return $this->hasMany(Pipeline::class, 'stage_id');
-    }
+    
    
 
 }

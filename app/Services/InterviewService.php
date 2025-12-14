@@ -6,11 +6,11 @@ use App\Http\Requests\AIRequest;
 use App\Models\Candidate;
 use App\Models\Interview;
 use App\Models\JobRole;
-
 use App\Models\Pipeline;
 use App\Models\ScoreCard;
 use Carbon\Carbon;
 use Exception;
+use Http;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
@@ -21,31 +21,48 @@ use Laravel\Pail\ValueObjects\Origin\Http as OriginHttp;
 
 class InterviewService {
     public static function scheduleInterviews($list_of_emails){
-        // first get the user's job_role_id and recruiter_id
+    
         $required_ids = self::getRequiredIds($list_of_emails);
 
-        // then select best next time for the interviews
-        $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids);
 
-        // move users in pipeline to next stage => screening
-        self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews);
+        $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids); 
+        
 
+        $payload = [
+            "emails" => $list_of_emails,
+            "interviews" => $list_of_interviews
+        ];
+       FacadesHttp::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
+        self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews); 
+        
         return true;
     }
-    private static function getRequiredIds($list_of_emails){
-        $first_email = reset($list_of_emails);
-        $required_ids = Candidate::where('email' , $first_email)
-                        ->select([
-                            'job_role_id'
-                        ])->first();
+    private static function getRequiredIds(array $list_of_emails){
+        if (empty($list_of_emails)) {
+            throw new Exception("Empty list of emails");
+        }
 
-        // then get the hiring_manager_id of this job
-        $hiring_manager_id = JobRole::where('id' , $required_ids["job_role_id"])
-                                    ->select("hiring_manager_id")
-                                    ->first();
-        return[
-            ...$required_ids,
-            "hiring_manager_id" => $hiring_manager_id
+        $first_email = reset($list_of_emails);
+
+        $candidate = Candidate::where('email', $first_email)
+            ->select('job_role_id')
+            ->first();
+
+        if (!$candidate) {
+           throw new Exception("Candidate not found");
+        }
+
+        $jobRole = JobRole::where('id', $candidate->job_role_id)
+            ->select('hiring_manager_id')
+            ->first();
+
+        if (!$jobRole) {
+            throw new Exception("Job role not found");
+        }
+
+        return [
+            'job_role_id' => $candidate->job_role_id,
+            'hiring_manager_id' => $jobRole->hiring_manager_id
         ];
     }
     private static function chooseNextBestSchedule($list_of_emails , $required_ids){
@@ -70,14 +87,14 @@ class InterviewService {
 
     }
     private static function getLastInterviewTime($hiring_manager_id){
-         return Interview::where('intreveiwer_id', $hiring_manager_id)
-            ->orderBy('schedule', 'desc')
+         return Interview::where('interviewer_id', $hiring_manager_id)
+            ->orderBy('schedule', 'desc') 
             ->value('schedule');
     }
     private static function determineNextInterviewTime($last_interview_time , $end_time){
         $next_interview_time = Carbon::parse($last_interview_time)->addMinutes(20);
 
-        // ensure interviews start at least 1 week from today
+    
         $oneWeekFromNow = now()->addWeek();
         if ($next_interview_time->lt($oneWeekFromNow)) {
             $next_interview_time = $oneWeekFromNow
@@ -85,9 +102,9 @@ class InterviewService {
                 ->setTime(8, 0);
         }
 
-        // 4) Check if time exceeds 2 PM
+        
         if ($next_interview_time->format('H:i') > $end_time->format('H:i')) {
-            // Move to next day at 8 AM
+            
             $next_interview_time = $next_interview_time->addDay()->setTime(8, 0);
         }
 
@@ -99,7 +116,7 @@ class InterviewService {
 
             $new_interview = new Interview([
                 'candidate_id'   => $candidate_id,
-                'intreveiwer_id' => $hiring_manager_id,
+                'interviewer_id' => $hiring_manager_id,
                 'schedule'       => $next_interview_time,
                 'job_role_id' => $job_role_id,
                 'type' => 'screen',
@@ -131,8 +148,8 @@ class InterviewService {
                                     ->where('job_role_id' , $required_ids["job_role_id"])
                                     ->first();
             $user_pipeline->global_stages = "screen"; // Use plural: global_stages
-            $user_pipeline->stage_id = null; // null when in global stage
-            $user_pipeline->intreview_id = $list_of_interviews[$interview_index++]->id;
+            $user_pipeline->custom_stage_id = null; // null when in global stage
+            $user_pipeline->interview_id = $list_of_interviews[$interview_index++]->id;
             $user_pipeline->save();
         }
 
@@ -148,9 +165,7 @@ class InterviewService {
        Http::post("http://localhost:5678/webhook-test/sendEmails" , $payload);
     }
 
-    /**
-     * Check if user can access interview based on role
-     */
+
     private static function canAccessInterview(Interview $interview): bool
     {
         /** @var \App\Models\User|null $user */
@@ -286,16 +301,16 @@ class InterviewService {
                 'candidate_id' => $data['candidate_id'],
                 'job_role_id' => $data['job_role_id'],
                 'global_stages' => 'screen', // Interview means they're in screening stage
-                'stage_id' => null,
-                'intreview_id' => $interview->id,
+                'custom_stage_id' => null,
+                'interview_id' => $interview->id,
             ]);
         } else {
             // Link interview to existing pipeline
-            $pipeline->intreview_id = $interview->id;
+            $pipeline->interview_id = $interview->id;
             // If pipeline is in 'applied' stage, move to 'screen' when interview is created
             if ($pipeline->global_stages === 'applied') {
                 $pipeline->global_stages = 'screen';
-                $pipeline->stage_id = null;
+                $pipeline->custom_stage_id = null;
             }
             $pipeline->save();
         }
@@ -366,8 +381,8 @@ class InterviewService {
         $user = Auth::user();
 
         $query = Interview::with(['interviewer', 'jobRole', 'candidate'])
-            ->where('intreveiwer_id', $interviewerId);
-
+            ->where('interviewer_id', $interviewerId);
+        
         // Filter by recruiter's job roles if not admin
         if ($user) {
             /** @var \App\Models\User $user */
