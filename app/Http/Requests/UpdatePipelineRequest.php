@@ -24,9 +24,9 @@ class UpdatePipelineRequest extends FormRequest
        return [
             'job_role_id' => 'sometimes|exists:job_roles,id',
             'candidate_id' => 'sometimes|exists:candidates,id',
-            'stage_id' => 'nullable|exists:custom_stages,id',
+            'custom_stage_id' => 'nullable|exists:custom_stages,id',
             'global_stages' => 'nullable|in:applied,screen,offer,hired,rejected',
-            'intreview_id' => 'nullable|exists:intreviews,id',
+            'interview_id' => 'nullable|exists:interviews,id',
         ];
     }
 }

@@ -22,7 +22,7 @@ class CustomStage extends Model
      */
     public function jobRole()
     {
-        return $this->belongsTo(JobRoles::class, 'job_role_id');
+        return $this->belongsTo(JobRole::class, 'job_role_id');
     }
 
     /**
@@ -30,6 +30,6 @@ class CustomStage extends Model
      */
     public function pipelines()
     {
-        return $this->hasMany(Pipeline::class, 'stage_id');
+        return $this->hasMany(Pipeline::class, 'custom_stage_id');
     }
 }

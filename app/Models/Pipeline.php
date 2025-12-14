@@ -9,9 +9,9 @@ class Pipeline extends Model
 {
     protected $fillable = [
         'job_role_id',
-        'intreview_id',
+        'interview_id',
         'candidate_id',
-        'stage_id', // nullable - points to custom_stages
+        'custom_custom_stage_id', // nullable - points to custom_stages
         'global_stages', // 'applied', 'screen', 'offer', 'hired', 'rejected', or null
     ];
 
@@ -27,7 +27,7 @@ class Pipeline extends Model
 
     public function interview()
     {
-        return $this->belongsTo(Interview::class, 'intreview_id');
+        return $this->belongsTo(Interview::class, 'interview_id');
     }
 
     public function candidate()
@@ -37,7 +37,7 @@ class Pipeline extends Model
 
     public function customStage()
     {
-        return $this->belongsTo(CustomStage::class, 'stage_id');
+        return $this->belongsTo(CustomStage::class, 'custom_stage_id');
     }
 
    
@@ -56,9 +56,9 @@ class Pipeline extends Model
             return $firstCustomStage ?: 'offer'; // If no custom stages, go to offer
         }
         
-        if ($this->stage_id) {
+        if ($this->custom_stage_id) {
             // Currently in custom stage, get next custom stage
-            $currentStage = CustomStage::find($this->stage_id);
+            $currentStage = CustomStage::find($this->custom_stage_id);
             if (!$currentStage) {
                 return null;
             }
@@ -99,9 +99,9 @@ class Pipeline extends Model
             return true;
         }
         
-        if ($this->stage_id) {
+        if ($this->custom_stage_id) {
             // Check if this is the last custom stage
-            $currentStage = CustomStage::find($this->stage_id);
+            $currentStage = CustomStage::find($this->custom_stage_id);
             if (!$currentStage) {
                 return false;
             }
