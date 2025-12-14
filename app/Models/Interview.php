@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Interview extends Model
 {
-     protected $table = 'intreviews';
+     protected $table = 'interviews';
     protected $fillable = [
-        'intreveiwer_id',
+        'interviewer_id',
         'job_role_id',
         'candidate_id',
         'type',
@@ -26,7 +26,7 @@ class Interview extends Model
     ];
      public function interviewer()
     {
-        return $this->belongsTo(User::class, 'intreveiwer_id');
+        return $this->belongsTo(User::class, 'interviewer_id');
     }
 
     /**
@@ -34,7 +34,7 @@ class Interview extends Model
      */
     public function jobRole()
     {
-        return $this->belongsTo(JobRoles::class, 'job_role_id');
+        return $this->belongsTo(JobRole::class, 'job_role_id');
     }
 
     /**

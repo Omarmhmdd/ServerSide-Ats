@@ -20,7 +20,6 @@ return new class extends Migration
         Schema::dropIfExists('candidate_skills');
         Schema::dropIfExists('candidate_work_experience');
         Schema::dropIfExists('candidate_volunteering');
-        Schema::dropIfExists('stages');
         Schema::dropIfExists('job');
         Schema::dropIfExists('job_batches');
     }

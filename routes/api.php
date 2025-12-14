@@ -43,18 +43,7 @@ Route::group(["prefix" => "v0.1"], function () {
         // CANDIDATES
         // OFFERS
         // INTERVIEW
-    });
 
-        // CANDIDATES
-        Route::group(["prefix" => "candidate"] , function(){
-            Route::post("/import" , [CandidateImportController::class , "import"]);
-            Route::get('/getMetaData/{candidate_id}' , [CandidateController::class , 'getMetaData']);
-        });
-
-        // COPILOT
-        Route::group(["prefix" => "copilot"] , function(){
-            Route::post("/ask" , [RagCopilotController::class , "ask"]);
-        });
 
         // INTERVIEW ROUTES
         // All authenticated users can access interviews
@@ -69,7 +58,8 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::post("/{id}/status", [InterviewController::class, "updateStatus"]);
         });
 
-        // PIPELINE ROUTES
+
+         // PIPELINE ROUTES
         // All authenticated users can access pipelines
         Route::prefix("pipelines")->group(function () {
             Route::get("/", [PipelineController::class, "index"]);
@@ -89,6 +79,34 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/job-role/{jobRoleId}/kanban", [PipelineController::class, "getKanbanBoard"])->middleware("role:admin,recruiter,interviewer");
         });
 
+
+          Route::prefix("job-roles")->group(function () {
+            Route::get("/{jobRoleId}/stages", [CustomStageController::class, "getStagesForJobRole"])->middleware("role:admin,recruiter,interviewer");
+            Route::post("/{jobRoleId}/stages", [CustomStageController::class, "store"])->middleware("role:admin,recruiter");
+            Route::post("/{jobRoleId}/stages/reorder", [CustomStageController::class, "reorder"])->middleware("role:admin,recruiter");
+    });
+
+            Route::prefix("stages/custom")->group(function () {
+            Route::post("/{id}/update", [CustomStageController::class, "update"])->middleware("role:admin,recruiter");
+            Route::post("/{id}/delete", [CustomStageController::class, "destroy"])->middleware("role:admin,recruiter");
+    });
+
+    });
+
+        // CANDIDATES
+        Route::group(["prefix" => "candidate"] , function(){
+            Route::post("/import" , [CandidateImportController::class , "import"]);
+            Route::get('/getMetaData/{candidate_id}' , [CandidateController::class , 'getMetaData']);
+        });
+
+        // COPILOT
+        Route::group(["prefix" => "copilot"] , function(){
+            Route::post("/ask" , [RagCopilotController::class , "ask"]);
+        });
+
+        
+
+       
         // STAGE ROUTES
         // Admin and Recruiter can manage stages
 /*     Route::prefix("stages")->group(function () {
@@ -106,16 +124,7 @@ Route::group(["prefix" => "v0.1"], function () {
             //   Route::post("/job-role/{jobRoleId}/assign", [StageController::class, "assignStagesToJobRole"])->middleware("role:admin,recruiter");
            // Route::post("/job-role/{jobRoleId}/order", [StageController::class, "updateStageOrderForJobRole"])->middleware("role:admin,recruiter");
         });*/
-            Route::prefix("job-roles")->group(function () {
-            Route::get("/{jobRoleId}/stages", [CustomStageController::class, "getStagesForJobRole"])->middleware("role:admin,recruiter,interviewer");
-            Route::post("/{jobRoleId}/stages", [CustomStageController::class, "store"])->middleware("role:admin,recruiter");
-            Route::post("/{jobRoleId}/stages/reorder", [CustomStageController::class, "reorder"])->middleware("role:admin,recruiter");
-    });
-
-            Route::prefix("stages/custom")->group(function () {
-            Route::post("/{id}/update", [CustomStageController::class, "update"])->middleware("role:admin,recruiter");
-            Route::post("/{id}/delete", [CustomStageController::class, "destroy"])->middleware("role:admin,recruiter");
-    });
+          
 
         // TODO:  Add routes for other modules
         // Recruiter routes

@@ -22,7 +22,7 @@ class UpdateInterviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'intreveiwer_id' => 'sometimes|exists:users,id',
+            'interviewer_id' => 'sometimes|exists:users,id',
             'job_role_id' => 'sometimes|exists:job_roles,id',
             'candidate_id' => 'sometimes|exists:candidates,id',
             'type' => 'sometimes|string|max:255',

@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Candidate;
+use App\Models\Pipeline;
 use IngestCandidateToRag;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -18,7 +19,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
     * @return \Illuminate\Database\Eloquent\Model|null
     */
 
-    use SkipsErrors;// error collection instead of distrubpting code flow
+    use SkipsErrors;
 
     protected int $recruiterId;
     protected $jobRoleId;
@@ -29,11 +30,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
-<<<<<<< HEAD
-    public function chunkSize(): int{
-=======
   public function chunkSize(): int{
->>>>>>> e29b71efd7c7959d60cd4942664193037134a514
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
 
@@ -58,16 +55,16 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
 
             $new_candidate->save();
 
-           // create new pipeline here
+
             $new_pipeline = new Pipeline([
                 'job_role_id' => (int)$this->jobRoleId,
-                'intreview_id' => null,
+                'interview_id' => null,
                 'candidate_id' => $new_candidate->id,
                 'global_stages' => 'applied', // Use plural: global_stages
-                'stage_id' => null, // null when in global stage
+                'custom_stage_id' => null, // null when in global stage
             ]);
 
-            // dispatch ingestion job
+    
             IngestCandidateToRag::dispatch($new_candidate->id);
             
 
@@ -75,7 +72,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
             return $new_candidate;
         }catch(Throwable $e){
             $this->onError($e);
-            return null; // skip this row and keep going
+            return null; 
         }
     }
 }

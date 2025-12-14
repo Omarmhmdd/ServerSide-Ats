@@ -18,9 +18,7 @@ class CustomStageController extends Controller
         $this->customStageService = $customStageService;
     }
 
-    /**
-     * Get all custom stages for a job role
-     */
+
     public function getStagesForJobRole(int $jobRoleId): JsonResponse
     {
         try {
@@ -33,9 +31,7 @@ class CustomStageController extends Controller
         }
     }
 
-    /**
-     * Create a custom stage for a job role
-     */
+
     public function store(Request $request, int $jobRoleId): JsonResponse
     {
         try {
@@ -64,9 +60,7 @@ class CustomStageController extends Controller
         }
     }
 
-    /**
-     * Update a custom stage
-     */
+
     public function update(Request $request, int $id): JsonResponse
     {
         try {
@@ -90,9 +84,7 @@ class CustomStageController extends Controller
         }
     }
 
-    /**
-     * Delete a custom stage
-     */
+
     public function destroy(int $id): JsonResponse
     {
         try {
@@ -107,9 +99,7 @@ class CustomStageController extends Controller
         }
     }
 
-    /**
-     * Reorder stages for a job role
-     */
+
     public function reorder(Request $request, int $jobRoleId): JsonResponse
     {
         try {

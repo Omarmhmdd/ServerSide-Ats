@@ -22,7 +22,7 @@ class StoreInterviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'intreveiwer_id' => 'required|exists:users,id',
+            'interviewer_id' => 'required|exists:users,id',
             'job_role_id' => 'required|exists:job_roles,id',
             'candidate_id' => 'required|exists:candidates,id',
             'type' => 'required|string|max:255',

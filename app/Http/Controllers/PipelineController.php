@@ -18,9 +18,7 @@ class PipelineController extends Controller
         $this->pipelineService = $pipelineService;
     }
 
-    /**
-     * Display a listing of pipelines.
-     */
+
     public function index(): JsonResponse
     {
         try {
@@ -45,9 +43,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Display the specified pipeline entry.
-     */
+
     public function show(int $id): JsonResponse
     {
         try {
@@ -60,9 +56,6 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Update the specified pipeline entry.
-     */
     public function update(UpdatePipelineRequest $request, int $id): JsonResponse
     {
         try {
@@ -78,9 +71,6 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Remove the specified pipeline entry.
-     */
     public function destroy(int $id): JsonResponse
     {
         try {
@@ -93,9 +83,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Get pipelines by job role ID
-     */
+
     public function getByJobRole(int $jobRoleId): JsonResponse
     {
         try {
@@ -106,9 +94,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Get pipelines by candidate ID
-     */
+
     public function getByCandidate(int $candidateId): JsonResponse
     {
         try {
@@ -119,9 +105,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Get pipelines by stage ID
-     */
+
     public function getByStage(int $stageId): JsonResponse
     {
         try {
@@ -132,29 +116,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Move candidate to a different stage
-     */
-    /*public function moveToStage(Request $request, int $id): JsonResponse
-    {
-        try {
-            $stageId = $request->input('stage_id');
-            
-            if (!$stageId) {
-                return $this->errorResponse('stage_id is required', 400);
-            }
-
-            $pipeline = $this->pipelineService->moveCandidateToStage($id, $stageId);
-            return $this->successResponse(
-                ['pipeline' => $pipeline],
-                'Candidate moved to new stage successfully'
-            );
-        } catch (ModelNotFoundException $e) {
-            return $this->errorResponse('Pipeline entry not found', 404);
-        } catch (\Exception $e) {
-            return $this->errorResponse('Failed to move candidate', 500, ['error' => $e->getMessage()]);
-        }
-    }*/
+    
 
     
     public function getStatistics(int $jobRoleId): JsonResponse
@@ -184,9 +146,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Reject candidate
-     */
+
     public function reject(int $id): JsonResponse
     {
         try {
@@ -204,9 +164,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Hire candidate
-     */
+
     public function hire(int $id): JsonResponse
     {
         try {
@@ -224,9 +182,7 @@ class PipelineController extends Controller
         }
     }
 
-    /**
-     * Get Kanban board data for a job role
-     */
+
     public function getKanbanBoard(int $jobRoleId): JsonResponse
     {
         try {
