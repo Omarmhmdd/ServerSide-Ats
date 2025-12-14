@@ -22,6 +22,7 @@ class JobRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => 'int|required',
             'recruiter_id'     => 'required|int|',
             'level_id'     => 'required|int|',
             'hiring_manager_id'     => 'required|int|',

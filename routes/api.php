@@ -20,6 +20,7 @@ Route::group(["prefix" => "v0.1"], function () {
     // UNPROTECTED ROUTES
     Route::post("/login" , [AuthController::class , "login"]);
     Route::post("/signup" , [AuthController::class , "register"]);
+    Route::post('/interviews/create_scorecard', [InterviewController::class, 'createScoreCard']);
 
     // AUTHENTICATED ROUTES
     // AUTHINTICATABLES
@@ -51,6 +52,7 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/", [InterviewController::class, "index"]);
             Route::post("/", [InterviewController::class, "store"]);
             Route::get("/{id}", [InterviewController::class, "show"]);
+            Route::post("/{id}/complete", [InterviewController::class, "MarkAsComplete"]);
             Route::post("/{id}/update", [InterviewController::class, "update"]);
             Route::post("/{id}/delete", [InterviewController::class, "destroy"]);
             Route::get("/candidate/{candidateId}", [InterviewController::class, "getByCandidate"]);
@@ -104,9 +106,9 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::post("/ask" , [RagCopilotController::class , "ask"]);
         });
 
-        
 
-       
+
+
         // STAGE ROUTES
         // Admin and Recruiter can manage stages
 /*     Route::prefix("stages")->group(function () {
@@ -115,8 +117,8 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/{id}", [StageController::class, "show"]);
             Route::post("/{id}/update", [StageController::class, "update"])->middleware("role:admin,recruiter");
             Route::post("/{id}/delete", [StageController::class, "destroy"])->middleware("role:admin,recruiter");
-        
-            
+
+
 
 
             // Per-role stage routes
@@ -124,7 +126,7 @@ Route::group(["prefix" => "v0.1"], function () {
             //   Route::post("/job-role/{jobRoleId}/assign", [StageController::class, "assignStagesToJobRole"])->middleware("role:admin,recruiter");
            // Route::post("/job-role/{jobRoleId}/order", [StageController::class, "updateStageOrderForJobRole"])->middleware("role:admin,recruiter");
         });*/
-          
+
 
         // TODO:  Add routes for other modules
         // Recruiter routes
@@ -140,4 +142,5 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
         // Route::get('/github/{username}' , [GithubController::class , 'analyze']);
     });
+
 });
