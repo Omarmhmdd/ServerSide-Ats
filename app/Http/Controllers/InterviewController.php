@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AIRequest;
 use App\Http\Requests\StoreInterviewRequest;
 use App\Http\Requests\UpdateInterviewRequest;
+use App\Models\Interview;
 use App\Services\InterviewService;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -115,8 +116,11 @@ class InterviewController extends Controller
     }
     public function MarkAsComplete($id){
         try {
-
             $interview = InterviewService::MarkAsComplete($id);
+            return $this->successResponse(
+            ['interview' => $interview],
+            'Interview marked as complete successfully'
+        );
 
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Interview not found', 404);
@@ -127,15 +131,15 @@ class InterviewController extends Controller
         }
     }
 
-    public function saveAiSummary(AIRequest $request){
+    public function createScoreCard(AIRequest $request){
 
         try {
 
-            $summary = InterviewService::saveAiSummary($request);
+            $summary = InterviewService::createScoreCard($request);
             return $this->successResponse($summary);
 
         } catch (ModelNotFoundException $e) {
-            return $this->errorResponse('Interview not found', 404);
+            return $this->errorResponse($e, 404);
         } catch (InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         } catch (Exception $e) {

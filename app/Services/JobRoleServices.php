@@ -24,56 +24,71 @@ class JobRoleServices
         return $levels;
     }
 
-    static function getRoles($id){
-        if(!$id){
-            $roles = DB::select('SELECT
-                job_roles.id,
-                recruiter.id AS recruiter_id,
-                recruiter.name AS recruiter_name,
-                levels.id AS level_id,
-                levels.name AS level_name,
-                manager.id AS hiring_manager_id,
-                manager.name AS hiring_manager_name,
-                job_roles.location,
-                job_roles.title,
-                job_roles.description,
-                job_roles.is_remote,
-                job_roles.is_on_site,
-                job_skills.name,
-                job_skills.nice_to_have
-            FROM job_roles
-            INNER JOIN users AS recruiter ON job_roles.recruiter_id = recruiter.id
-            INNER JOIN users AS manager ON job_roles.hiring_manager_id = manager.id
-            INNER JOIN levels ON job_roles.level_id = levels.id
-            INNER JOIN job_skills ON job_roles.id  = job_skills.job_role_id;');
-            return $roles;
-        }
+    public static function getRoles($id = null)
+{
+    $query = JobRole::with(['recruiter', 'hiringManager', 'level', 'skills']);
 
-        $role = DB::select('SELECT
-                job_roles.id,
-                recruiter.id AS recruiter_id,
-                recruiter.name AS recruiter_name,
-                levels.id AS level_id,
-                levels.name AS level_name,
-                manager.id AS hiring_manager_id,
-                manager.name AS hiring_manager_name,
-                job_roles.location,
-                job_roles.title,
-                job_roles.description,
-                job_roles.is_remote,
-                job_roles.is_on_site,
-                job_skills.name,
-                job_skills.nice_to_have
-            FROM job_roles
-            INNER JOIN users AS recruiter ON job_roles.recruiter_id = recruiter.id
-            INNER JOIN users AS manager ON job_roles.hiring_manager_id = manager.id
-            INNER JOIN levels ON job_roles.level_id = levels.id
-            INNER JOIN job_skills ON job_roles.id  = job_skills.job_role_id WHERE job_roles.id = ?;',[$id]);
-        return $role;
+    $roles = $id
+        ? $query->where('id', $id)->get()
+        : $query->get();
+
+    return $roles->map(function ($role) {
+        return [
+            'id'          => $role->id,
+            'title'       => $role->title,
+            'description' => $role->description,
+            'location'    => $role->location,
+            'is_remote'   => $role->is_remote,
+            'is_on_site'  => $role->is_on_site,
+
+            'recruiter_id'   => $role->recruiter->id ?? null,
+            'recruiter_name' => $role->recruiter->name ?? null,
+
+            'hiring_manager_id'   => $role->hiringManager->id ?? null,
+            'hiring_manager_name' => $role->hiringManager->name ?? null,
+
+            'level_id'   => $role->level->id ?? null,
+            'level_name' => $role->level->name ?? null,
+
+            'skills_list' => $role->skills->map(function ($skill) {
+                return [
+                    'name'         => $skill->name,
+                    'nice_to_have' => $skill->nice_to_have,
+                ];
+            }),
+        ];
+    });
+}
+
+    static function convertSkills($roles)
+    {
+        foreach ($roles as $role) {
+            $skills = [];
+
+            if (!empty($role->skills_list)) {
+                $pairs = explode(',', $role->skills_list);
+
+                foreach ($pairs as $pair) {
+                    if (strpos($pair, ':') !== false) {
+                        list($name, $nice) = explode(':', $pair);
+                        $skills[] = [
+                            'name' => $name,
+                            'nice_to_have' => (int)$nice
+                        ];
+                    }
+                }
+            }
+
+            $role->skills = $skills;
+            unset($role->skills_list);
+        }
     }
+
+
 
     public static function addOrUpdateRole($request, $id = 0)
     {
+        $id = $id ?: $request->input('id', 0);
         return DB::transaction(function () use ($request, $id) {
 
             $role = self::saveJobRole($request, $id);
@@ -92,7 +107,7 @@ class JobRoleServices
             $role = new JobRole();
         } else {
             $role = JobRole::find($id);
-            if (!$role) {
+            if (!$role && $id != 0) {
                 throw new \Exception("No Job Role Found.");
             }
         }
