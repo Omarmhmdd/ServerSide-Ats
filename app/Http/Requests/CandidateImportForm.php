@@ -23,7 +23,7 @@ class CandidateImportForm extends FormRequest
     {
         return [
             'file' => 'required|mimes:xlsx,xls,csv',
-            'job_role_id' => 'required|integer'
+            'job_role_id' => 'required|string'
         ];
     }
 }
