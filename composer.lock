@@ -4493,8 +4493,6 @@
             "time": "2025-09-04T20:59:21+00:00"
         },
         {
-<<<<<<< HEAD
-=======
             "name": "smalot/pdfparser",
             "version": "v2.12.2",
             "source": {
@@ -4593,7 +4591,6 @@
             "time": "2022-11-25T16:15:06+00:00"
         },
         {
->>>>>>> e801773639b82be01971db4654a4e091eea4ea71
             "name": "symfony/clock",
             "version": "v7.4.0",
             "source": {
@@ -7095,17 +7092,6 @@
             "time": "2025-10-27T20:36:44+00:00"
         },
         {
-<<<<<<< HEAD
-            "name": "tijsverkoyen/css-to-inline-styles",
-            "version": "v2.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/tijsverkoyen/CssToInlineStyles.git",
-                "reference": "f0292ccf0ec75843d65027214426b6b163b48b41"
-            },
-            "dist": {
-                "type": "zip",
-=======
             "name": "tenqz/qdrant",
             "version": "v1.0.0",
             "source": {
@@ -7177,7 +7163,6 @@
             },
             "dist": {
                 "type": "zip",
->>>>>>> e801773639b82be01971db4654a4e091eea4ea71
                 "url": "https://api.github.com/repos/tijsverkoyen/CssToInlineStyles/zipball/f0292ccf0ec75843d65027214426b6b163b48b41",
                 "reference": "f0292ccf0ec75843d65027214426b6b163b48b41",
                 "shasum": ""
