@@ -16,7 +16,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@2.36.0
         with: 
-          php-version: 8.2
+          php-version: 8.4.1
 
       - name: Install Composer
         run: composer install --no-interaction --no-progress --optimize-autoloader
