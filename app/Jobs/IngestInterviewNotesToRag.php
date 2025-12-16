@@ -1,6 +1,8 @@
 <?php
 
-use App\Candidate\Services\CandidateIngestionService;
+namespace App\Jobs;
+
+use App\Services\Candidate\CandidateIngestionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

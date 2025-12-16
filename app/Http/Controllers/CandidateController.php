@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Candidate\Services\CandidateService;
+use App\Services\Candidate\CandidateService;
 use App\Http\Requests\metaDataRequest;
+use Auth;
 use Exception;
 use Log;
 
@@ -33,6 +34,43 @@ class CandidateController extends Controller
             return $this->successResponse($meta_data);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get candidates data", 500 , ["info" => $ex->getMessage()]);
+        }
+    }
+
+    public function getCandidatesAllJobRoles($recruiter_id){
+        try{
+            $candidatesByRole = CandidateService::getCandidateByRole($recruiter_id);
+            return $this->successResponse($candidatesByRole);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to save meta data for candidate" , 500 , ["1" => $ex->getMessage()]);
+        }
+    }
+
+    public function getCandidateProgress($candidate_id){
+        try{
+            $candidateProgress = CandidateService::getCandidateProgress($candidate_id);
+            return $this->successResponse($candidateProgress);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get candidate's progress" , 500 , ["1" => $ex->getMessage()]);
+        }
+    }
+
+    public function getCandidateInterview($candidate_id){
+        try{
+            $candidateInterviews = CandidateService::getInterviews($candidate_id); 
+            return $this->successResponse($candidateInterviews);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get candidate's interviews" , 500 , ["1" => $ex->getMessage()]);
+        }
+    }
+
+    public function getStatistics(){
+        try{
+
+            $statistics = CandidateService::getStatistic(Auth::id());
+            return $this->successResponse($statistics);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get candidate's statistics" , 500 , ["1" => $ex->getMessage()]);
         }
     }
 

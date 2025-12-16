@@ -44,6 +44,10 @@ class Interview extends Model
     {
         return $this->belongsTo(Candidate::class, 'candidate_id');
     }
+
+    public function scoreCard(){
+        return $this->hasOne(ScoreCard::class , "interview_id" , 'id');
+    }
 }
 
 

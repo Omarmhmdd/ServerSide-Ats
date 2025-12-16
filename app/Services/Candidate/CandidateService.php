@@ -1,8 +1,13 @@
 <?php
 
-namespace App\Candidate\Services;
+namespace App\Services\Candidate;
 
-use App\CV\Services\CVExtractionService;
+use App\Models\CustomStage;
+use App\Models\Interview;
+use App\Models\JobRole;
+use App\Models\Pipeline;
+use App\Services\Candidate\BuildCandidateMetaDataService;
+use App\Services\CV\CVExtractionService;
 use App\Models\Candidate;
 use App\Services\GitHubService;
 use App\Services\InterviewService;
@@ -13,7 +18,9 @@ use App\Services\MetaDataService\EducationMetaData;
 use App\Services\MetaDataService\MetaDataService;
 use App\Services\MetaDataService\ProjectMetaData;
 use App\Services\MetaDataService\RepositoryMetaData;
+use DB;
 use Exception;
+use function Laravel\Prompts\select;
 
 class CandidateService{
     public static function saveMetaData(array $allMetaData){
@@ -31,7 +38,8 @@ class CandidateService{
     }
 
     public static function getMetaData(int $candidate_id){
-        Candidate::firstOrFail($candidate_id);
+        $candidate = Candidate::where('id' , $candidate_id)->first();
+        if(!$candidate) throw new Exception("Candidate not found");
 
         $domains = [
             "repositories" => RepositoryMetaData::class,
@@ -43,10 +51,13 @@ class CandidateService{
         ];
 
         $meta_data = [];
+        // add candidate
+        $meta_data["candidate"] = $candidate;
         foreach($domains as $domain => $model_class){
             $meta_data_service = new MetaDataService(new $model_class);
             $meta_data[$domain] = $meta_data_service->get($candidate_id);
         }
+     
 
         return $meta_data;
     }
@@ -56,9 +67,7 @@ class CandidateService{
         $items = $allMetaData["meta_data"];
         for($i = 0; $i < count($items); $i++){
             $data = $items[$i]['json'];
-            $candidate = Candidate::where('id', $data["candidate_id"])
-                    ->select('email')
-                    ->first();
+            $candidate = self::getCandidateEmail($data);
 
             if ($candidate) {
                 $listOfEmails[$data["candidate_id"]] = $candidate->email;
@@ -68,62 +77,232 @@ class CandidateService{
         InterviewService::scheduleInterviews($listOfEmails);
     }
 
-    public static function cleanUtf8($str){
-        return $str ? mb_convert_encoding($str, 'UTF-8', 'UTF-8') : null;
+    public static function getCandidateData(){
+        $candidates = self::getUnprocessedCandidates();
+
+        $githubService = new GitHubService();
+        $cvService     = new CVExtractionService();
+
+        $users = $candidates->map(function ($candidate) use ($githubService, $cvService) {
+            return self::buildCandidatePayload(
+                $candidate,
+                $githubService,
+                $cvService
+            );
+        })->values()->toArray();
+
+        return ['users' => $users];
     }
 
-    public static function getCandidateData(){
-        $candidates = Candidate::where('processed', 0)
-        ->select([
-            'id',
-            'github_username',
-            'attachments'
-        ])
-        ->get();
-        
-        $github = new GitHubService();
-        $cvExtractor = new CVExtractionService();
 
-        $results = [];
+    public static function getCandidateByRole(int $recruiter_id){
+        // get all job roles of this recruiter
+        $jobRoles = JobRole::where('recruiter_id' , $recruiter_id)->get();
 
-        foreach ($candidates as $candidate) {
+        // get all candidate per role
+        $candidatesByRole = [];
+        foreach($jobRoles as $role){
+            $candidatesByRole[$role->id] = self::getCandidateForRole($recruiter_id , $role);
+        }
 
-            $githubProfile = null;
-            $githubRepos = [];
+        return $candidatesByRole;
+    }
+    
+    public static function getInterviews($candidate_id){
+        $interviews = Interview::with('scoreCard')
+                                ->where('candidate_id' , $candidate_id)
+                                ->get();
+        return $interviews;        
+    }
 
-            if (!empty($candidate->github_username)) {
-                $githubProfile = $github->getUser($candidate->github_username);
-                $githubRepos   = $github->getRepos($candidate->github_username);
-            }
+    public static function getCandidateProgress(int $candidateId): array{
+        $candidate = self::getCandidate($candidateId);
 
-            // cv extraction
-            $cvText = null;
-            if (!empty($candidate->attachments)) {
-                $cvText = CandidateService::cleanUtf8($cvExtractor->extract($candidate->attachments));
-            }
+        $stages = self::getAllStagesForJobRole($candidate->job_role_id);
 
-            // clean github info from UTF-8
-            $githubProfile = array_map([CandidateService::class, 'cleanUtf8'], $githubProfile ?? []);
-            $githubRepos = array_map(function($repo) {
-                return array_map([CandidateService::class, 'cleanUtf8'], $repo);
-            }, $githubRepos ?? []);
+        $liveStage = self::getLiveStage(
+            $candidateId,
+            $candidate->job_role_id
+        );
 
+        $stages[] = $liveStage;
 
-            $results[] = [
-                "candidate_id" => $candidate->id,
-                "github" => [
-                    "profile" => $githubProfile,
-                    "repos"   => $githubRepos
-                ],
-                "cv_text" => $cvText,
+        return $stages;
+    }
+
+    public static function getStatistic(int $recruiterId){
+        // number of applications
+        $applications = Candidate::where('recruiter_id', $recruiterId)
+            ->count();
+
+        // offers
+        $offers = DB::table('pipelines')
+            ->where('global_stages', 'offer')
+            ->whereIn('job_role_id', function ($query) use ($recruiterId) {
+                $query->select('id')
+                    ->from('job_roles')
+                    ->where('recruiter_id', $recruiterId);
+            })
+            ->count();
+
+        // hires
+        $hired = DB::table('pipelines')
+            ->where('global_stages', 'hired')
+            ->whereIn('job_role_id', function ($query) use ($recruiterId) {
+                $query->select('id')
+                    ->from('job_roles')
+                    ->where('recruiter_id', $recruiterId);
+            })
+            ->count();
+
+        // rejectees
+        $rejected = DB::table('pipelines')
+            ->where('global_stages', 'rejected')
+            ->whereIn('job_role_id', function ($query) use ($recruiterId) {
+                $query->select('id')
+                    ->from('job_roles')
+                    ->where('recruiter_id', $recruiterId);
+            })
+            ->count();
+
+        return [
+            'applications' => $applications,
+            'offers'       => $offers,
+            'hired'        => $hired,
+            'rejected'     => $rejected,
+        ];
+    }
+
+    private static function getCandidateEmail($data){
+        return Candidate::where('id', $data["candidate_id"])
+                    ->select('email')
+                    ->first();
+    }
+
+    private static function getCandidate(int $candidateId){
+        return Candidate::findOrFail($candidateId);
+    }
+
+    private static function getAllStagesForJobRole(int $jobRoleId){
+        $stages = [
+            'applied',
+            'screening',
+        ];
+
+        $customStages = CustomStage::where('job_role_id', $jobRoleId)
+            ->pluck('name')
+            ->toArray();
+
+        return array_merge(
+            $stages,
+            $customStages,
+            ['offer']
+        );
+    }
+
+    private static function getLiveStage(int $candidateId,int $jobRoleId): array {
+        $pipeline = Pipeline::where('candidate_id', $candidateId)
+            ->where('job_role_id', $jobRoleId)
+            ->with('customStage')
+            ->first();
+
+        if (!$pipeline) {
+            return [
+                'id'   => null,
+                'name' => null,
+            ];
+        }
+
+        // Custom stage takes priority unless Offer
+        if ($pipeline->custom_stage_id && $pipeline->global_stages !== 'Offer') {
+            return [
+                'id'   => $pipeline->custom_stage_id,
+                'name' => $pipeline->customStage->name,
             ];
         }
 
         return [
-            "users" => $results
+            'id'   => null,
+            'name' => $pipeline->global_stages,
         ];
-
     }
 
+    private static function getCandidateForRole($recruiter_id , $role){
+        $candidates = Candidate::where('recruiter_id' , $recruiter_id)
+                                ->where('job_role_id' , $role->id)
+                                ->get();
+        return [
+            "role_name" => $role->title,
+            "candidates" => $candidates
+        ];
+    }
+
+    public static function cleanUtf8($str){
+        return $str ? mb_convert_encoding($str, 'UTF-8', 'UTF-8') : null;
+    }
+
+    private static function getUnprocessedCandidates(){
+        return Candidate::where('processed', 0)
+            ->select([
+                'id',
+                'github_username',
+                'attachments',
+            ])
+            ->get();
+    }
+    private static function buildCandidatePayload(Candidate $candidate,GitHubService $githubService,CVExtractionService $cvService) {
+        return [
+            'candidate_id' => $candidate->id,
+            'github'       => self::getGithubData($candidate, $githubService),
+            'cv_text'      => self::getCvText($candidate, $cvService),
+        ];
+    }
+
+    private static function getGithubData(Candidate $candidate,GitHubService $githubService) {
+        if (empty($candidate->github_username)) {
+            return [
+                'profile' => null,
+                'repos'   => [],
+            ];
+        }
+
+        $profile = $githubService->getUser($candidate->github_username);
+        $repos   = $githubService->getRepos($candidate->github_username);
+
+        return [
+            'profile' => self::cleanArray($profile),
+            'repos'   => self::cleanNestedArray($repos),
+        ];
+    }
+
+    private static function getCvText(Candidate $candidate,CVExtractionService $cvService) {
+        if (empty($candidate->attachments)) {
+            return null;
+        }
+
+        return self::cleanUtf8(
+            $cvService->extract($candidate->attachments)
+        );
+    }
+
+    private static function cleanArray(?array $data): ?array{
+        if (!$data) {
+            return null;
+        }
+
+        return array_map(
+            [self::class, 'cleanUtf8'],
+            $data
+        );
+    }
+
+    private static function cleanNestedArray(array $data): array{
+        return array_map(function ($item) {
+            return array_map(
+                [self::class, 'cleanUtf8'],
+                $item
+            );
+        }, $data);
+    }
 
 }

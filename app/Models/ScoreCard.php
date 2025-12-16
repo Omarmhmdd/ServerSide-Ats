@@ -22,4 +22,5 @@ class ScoreCard extends Model
         'updated_at' => 'datetime',
     ];
 
+
 }

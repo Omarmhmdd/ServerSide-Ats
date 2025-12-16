@@ -6,7 +6,12 @@ use Illuminate\Support\Facades\Http;
 
 class GitHubService
 {
-    private $baseUrl = env('GITHUB_URL');
+    private $baseUrl;
+
+    public function __construct(){
+        $this->baseUrl =  env('GITHUB_URL');
+    }
+
 
     public function getUser($username){
         $response = Http::get("{$this->baseUrl}/users/{$username}");

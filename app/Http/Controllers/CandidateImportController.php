@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Candidate\Services\CandidateImportService;
 use App\Http\Requests\CandidateImportForm;
+use App\Services\Candidate\CandidateImportService;
 use Auth;
 use Exception;
 
-class CandidateImportController extends Controller
-{
+class CandidateImportController extends Controller{
     protected int $user_id;
 
     public function __construct(){

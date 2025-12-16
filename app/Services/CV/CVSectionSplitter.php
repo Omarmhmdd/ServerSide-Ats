@@ -1,6 +1,6 @@
 <?php
 
-namespace App\CV\Services;
+namespace App\Services\CV;
 
 class CVSectionSplitter{
      protected array $sectionMap = [

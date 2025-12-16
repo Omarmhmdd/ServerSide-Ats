@@ -2,7 +2,7 @@
 
 namespace App\Services\MetaDataService;
 
-use App\MetaDataService\Services\MetaDataDomain;
+use App\Services\MetaDataService\MetaDataDomain;
 use App\Models\Education;
 
 class EducationMetaData implements MetaDataDomain{
