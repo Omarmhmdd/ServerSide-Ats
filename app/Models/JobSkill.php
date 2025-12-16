@@ -13,7 +13,7 @@ class JobSkill extends Model
 
 
     protected $fillable = [
-        'role_id',
+        'job_role_id',
         'name',
         'nice_to_have'
     ];

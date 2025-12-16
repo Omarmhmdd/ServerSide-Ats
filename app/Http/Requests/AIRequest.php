@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdatePipelineRequest extends FormRequest
+class AIRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -19,14 +19,13 @@ class UpdatePipelineRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-  public function rules(): array
+    public function rules(): array
     {
-       return [
-            'job_role_id' => 'sometimes|exists:job_roles,id',
-            'candidate_id' => 'sometimes|exists:candidates,id',
-            'custom_stage_id' => 'nullable|exists:custom_stages,id',
-            'global_stages' => 'nullable|in:applied,screen,offer,hired,rejected',
-            'interview_id' => 'nullable|exists:interviews,id',
+        return [
+            'interview_id' => 'required|integer', 
+            'candidate_id' => 'required|integer',
+            'summary' => 'required|string',
+            'scorecard' => 'required|',
         ];
     }
 }

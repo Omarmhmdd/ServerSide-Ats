@@ -5,7 +5,7 @@ namespace App\Imports;
 use App\Jobs\IngestCandidateToRag;
 use App\Models\Candidate;
 use App\Models\Pipeline;
-
+use IngestCandidateToRag;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -20,7 +20,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
     * @return \Illuminate\Database\Eloquent\Model|null
     */
 
-    use SkipsErrors;// error collection instead of distrubpting code flow
+    use SkipsErrors;
 
     protected int $recruiterId;
     protected $jobRoleId;
@@ -56,24 +56,23 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
 
             $new_candidate->save();
 
-           // create new pipeline 
             $new_pipeline = new Pipeline([
                 'job_role_id' => (int)$this->jobRoleId,
-                'intreview_id' => null,
+                'interview_id' => null,
                 'candidate_id' => $new_candidate->id,
                 'global_stages' => 'applied', 
                 'custom_stage_id' => null, // null when in global stage
             ]);
             $new_pipeline->save();
 
-            // dispatch ingestion job
+    
             IngestCandidateToRag::dispatch($new_candidate->id);
             
             return $new_candidate;
 
         }catch(Throwable $e){
             $this->onError($e);
-            return null; // skip this row and keep going
+            return null; 
         }
     }
 }

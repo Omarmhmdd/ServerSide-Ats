@@ -14,7 +14,7 @@ class InterviewObserver{
     }
 
     public function saved(Interview $interview) : void{
-       $this->callNoteIngestionDispatcher($interview);
+     $this->callNoteIngestionDispatcher($interview);
     }
 
     /**
@@ -50,8 +50,8 @@ class InterviewObserver{
     }
 
     private function callNoteIngestionDispatcher($interview){
-        if(!empty($interview->notes)){
-            IngestInterviewNotesToRag::dispatch($interview->id);
-        }
+     //   if(!empty($interview->notes)){
+      //      IngestInterviewNotesToRag::dispatch($interview->id);
+      //  }
     }
 }

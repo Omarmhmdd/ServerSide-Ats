@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Interview extends Model
 {
-     protected $table = 'intreviews';
+     protected $table = 'interviews';
     protected $fillable = [
-        'interveiwer_id',
+        'interviewer_id',
         'job_role_id',
         'candidate_id',
         'type',
@@ -24,8 +24,9 @@ class Interview extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-    public function interviewer(){
-        return $this->belongsTo(User::class, 'intreveiwer_id');
+     public function interviewer()
+    {
+        return $this->belongsTo(User::class, 'interviewer_id');
     }
 
     /**

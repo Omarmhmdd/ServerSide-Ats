@@ -12,13 +12,16 @@ use App\Http\Controllers\CandidateImportController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\RagCopilotController;
 use App\Http\Controllers\PipelineController;
+use App\Http\Controllers\StageController;
 use App\Http\Controllers\CustomStageController;
+use App\Http\Controllers\OfferController;
 
 Route::group(["prefix" => "v0.1"], function () {
 
     // UNPROTECTED ROUTES
     Route::post("/login" , [AuthController::class , "login"]);
     Route::post("/signup" , [AuthController::class , "register"]);
+    Route::post('/interviews/create_scorecard', [InterviewController::class, 'createScoreCard']);
 
     // AUTHENTICATED ROUTES
     Route::group(["prefix"=>"auth" , "middleware" => "auth:api"] , function(){
@@ -63,6 +66,7 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/", [InterviewController::class, "index"]);
             Route::post("/", [InterviewController::class, "store"]);
             Route::get("/{id}", [InterviewController::class, "show"]);
+            Route::post("/{id}/complete", [InterviewController::class, "MarkAsComplete"]);
             Route::post("/{id}/update", [InterviewController::class, "update"]);
             Route::post("/{id}/delete", [InterviewController::class, "destroy"]);
             Route::get("/candidate/{candidateId}", [InterviewController::class, "getByCandidate"]);
@@ -89,16 +93,17 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/job-role/{jobRoleId}/kanban", [PipelineController::class, "getKanbanBoard"])->middleware("role:admin,recruiter,interviewer");
         });
 
-            Route::prefix("job-roles")->group(function () {
-                Route::get("/{jobRoleId}/stages", [CustomStageController::class, "getStagesForJobRole"])->middleware("role:admin,recruiter,interviewer");
-                Route::post("/{jobRoleId}/stages", [CustomStageController::class, "store"])->middleware("role:admin,recruiter");
-                Route::post("/{jobRoleId}/stages/reorder", [CustomStageController::class, "reorder"])->middleware("role:admin,recruiter");
-            });
 
-            Route::prefix("stages/custom")->group(function () {
+        Route::prefix("job-roles")->group(function () {
+            Route::get("/{jobRoleId}/stages", [CustomStageController::class, "getStagesForJobRole"])->middleware("role:admin,recruiter,interviewer");
+            Route::post("/{jobRoleId}/stages", [CustomStageController::class, "store"])->middleware("role:admin,recruiter");
+            Route::post("/{jobRoleId}/stages/reorder", [CustomStageController::class, "reorder"])->middleware("role:admin,recruiter");
+        });
+
+        Route::prefix("stages/custom")->group(function () {
             Route::post("/{id}/update", [CustomStageController::class, "update"])->middleware("role:admin,recruiter");
             Route::post("/{id}/delete", [CustomStageController::class, "destroy"])->middleware("role:admin,recruiter");
-    });
+        });
 
     // N8N
     Route::group(["prefix" => "n8n"] , function(){
@@ -106,5 +111,11 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
         Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
         // Route::get('/github/{username}' , [GithubController::class , 'analyze']);
+
+        //OM
+        Route::get("/offers/{offer_id}/workflow-data", [OfferController::class, 'getWorkflowData']);
+        Route::get("/pipelines/{pipeline_id}/offer", [OfferController::class, 'getOfferByPipeline']);
+
     });
+
 });

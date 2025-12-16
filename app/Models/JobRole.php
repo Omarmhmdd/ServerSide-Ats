@@ -32,11 +32,32 @@ class JobRole extends Model
         return $this->hasMany(CustomStage::class, 'job_role_id')->orderBy('order');
     }
 
-    
+
     public function getFirstCustomStage()
     {
         return $this->customStages()->orderBy('order')->first();
     }
+
+    public function recruiter()
+    {
+        return $this->belongsTo(User::class, 'recruiter_id');
+    }
+
+    public function hiringManager()
+    {
+        return $this->belongsTo(User::class, 'hiring_manager_id');
+    }
+
+    public function level()
+    {
+        return $this->belongsTo(Level::class, 'level_id');
+    }
+
+    public function skills()
+    {
+        return $this->hasMany(JobSkill::class, 'job_role_id');
+    }
+
 }
 
 

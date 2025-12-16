@@ -9,9 +9,9 @@ class Pipeline extends Model
 {
     protected $fillable = [
         'job_role_id',
-        'intreview_id',
+        'interview_id',
         'candidate_id',
-        'stage_id', // nullable - points to custom_stages
+        'custom_stage_id', // nullable - points to custom_stages
         'global_stages', // 'applied', 'screen', 'offer', 'hired', 'rejected', or null
     ];
 
@@ -27,7 +27,7 @@ class Pipeline extends Model
 
     public function interview()
     {
-        return $this->belongsTo(Interview::class, 'intreview_id');
+        return $this->belongsTo(Interview::class, 'interview_id');
     }
 
     public function candidate()
@@ -40,10 +40,7 @@ class Pipeline extends Model
         return $this->belongsTo(CustomStage::class, 'custom_stage_id');
     }
 
-    /**
-     * Get next stage in the pipeline order
-     * REQUIRED: Called by PipelineService::moveToNextStage() on line 190
-     */
+   
     public function getNextStage()
     {
         if ($this->global_stages === 'applied') {
@@ -59,9 +56,9 @@ class Pipeline extends Model
             return $firstCustomStage ?: 'offer'; // If no custom stages, go to offer
         }
         
-        if ($this->stage_id) {
+        if ($this->custom_stage_id) {
             // Currently in custom stage, get next custom stage
-            $currentStage = CustomStage::find($this->stage_id);
+            $currentStage = CustomStage::find($this->custom_stage_id);
             if (!$currentStage) {
                 return null;
             }
@@ -81,6 +78,7 @@ class Pipeline extends Model
         return null; // Already at final state
     }
 
+    
     public function canReject(): bool
     {
         return $this->global_stages !== 'applied' 
@@ -88,28 +86,22 @@ class Pipeline extends Model
             && $this->global_stages !== 'rejected';
     }
 
-    /**
-     * Check if candidate can move to next stage
-     */
+    
     public function canMoveNext(): bool
     {
         $next = $this->getNextStage();
         return $next !== null && $next !== 'hired' && $next !== 'rejected';
     }
 
-    /**
-     * Check if candidate has completed all custom stages
-     * REQUIRED: Called by PipelineService::hireCandidate()
-     */
     public function hasCompletedAllCustomStages(): bool
     {
         if ($this->global_stages === 'hired' || $this->global_stages === 'rejected') {
             return true;
         }
         
-        if ($this->stage_id) {
+        if ($this->custom_stage_id) {
             // Check if this is the last custom stage
-            $currentStage = CustomStage::find($this->stage_id);
+            $currentStage = CustomStage::find($this->custom_stage_id);
             if (!$currentStage) {
                 return false;
             }
