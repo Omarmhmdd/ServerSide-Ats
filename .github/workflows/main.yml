@@ -36,27 +36,23 @@ jobs:
       - name: Checkout code 
         uses: actions/checkout@v6.0.1
       
-      - name: Deploy files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST_NAME }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          source: "app/,config/,database/,routes/,resources/,bootstrap/,public/,composer.json,composer.lock,artisan"
-          target: "/var/www/ServerSide-Ats/"
-          strip_components: 0
-          overwrite: true
-      
-      - name: Run deployment commands
+      - name: Deploy to EC2 Server
         uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
+            cd /tmp
+            rm -rf ServerSide-Ats-deploy
+            git clone https://github.com/Omarmhmdd/ServerSide-Ats.git ServerSide-Ats-deploy
+            cd ServerSide-Ats-deploy
+            sudo rsync -av --exclude='.git' --exclude='vendor' --exclude='node_modules' --exclude='storage' --exclude='.env' ./ /var/www/ServerSide-Ats/
             cd /var/www/ServerSide-Ats
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
+            cd /tmp
+            rm -rf ServerSide-Ats-deploy
