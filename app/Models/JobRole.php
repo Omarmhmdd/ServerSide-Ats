@@ -15,7 +15,7 @@ class JobRole extends Model
     protected $fillable = [
         'recruiter_id',
         'level_id',
-        'hiring_manager_id',
+        'interviewer_id',
         'location',
         'title',
         'description',
@@ -43,9 +43,9 @@ class JobRole extends Model
         return $this->belongsTo(User::class, 'recruiter_id');
     }
 
-    public function hiringManager()
+    public function interviewer()
     {
-        return $this->belongsTo(User::class, 'hiring_manager_id');
+        return $this->belongsTo(User::class, 'interviewer_id');
     }
 
     public function level()

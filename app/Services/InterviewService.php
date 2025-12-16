@@ -438,6 +438,7 @@ class InterviewService {
             'interview_id' => $interview->id,
             'candidate_email' => $interview->candidate->email,
             'interviewer_email' => $interview->interviewer->email,
+            'recruiter_email' => $interview->jobRole->recruiter->email,
             'interviewer_name' => $interview->interviewer->name,
             'type' => $interview->type,
             'candidate_name' => $interview->candidate->first_name,
