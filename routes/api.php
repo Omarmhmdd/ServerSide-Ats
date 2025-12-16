@@ -14,6 +14,7 @@ use App\Http\Controllers\RagCopilotController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\StageController;
    use App\Http\Controllers\CustomStageController;
+   use App\Http\Controllers\OfferController;
 
 Route::group(["prefix" => "v0.1"], function () {
 
@@ -134,13 +135,18 @@ Route::group(["prefix" => "v0.1"], function () {
         // JOB ROLES routes
         // OFFERS routes
         // N8N webhook routes
-
+        
     // N8N
     Route::group(["prefix" => "n8n"] , function(){
         Route::get("/candidatesData" , [CandidateController::class , 'getCandidateData']);
         Route::post("/saveMetaData" , [CandidateController::class , "saveMetaData"]);
         Route::get("/createScreening/{candidate_id}" ,[InterviewController::class , 'createScreening']);
         // Route::get('/github/{username}' , [GithubController::class , 'analyze']);
+
+        //OM
+        Route::get("/offers/{offer_id}/workflow-data", [OfferController::class, 'getWorkflowData']);
+        Route::get("/pipelines/{pipeline_id}/offer", [OfferController::class, 'getOfferByPipeline']);
+
     });
 
 });

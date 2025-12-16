@@ -142,7 +142,7 @@ class CustomStageService
         return $stage->fresh();
     }
 
-   
+
     public function deleteStage(int $id): bool
     {
         $stage = CustomStage::find($id);
