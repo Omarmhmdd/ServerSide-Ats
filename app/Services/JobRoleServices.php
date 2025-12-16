@@ -17,14 +17,13 @@ class JobRoleServices
         return $levels;
     }
 
-   public static function getRoles($id = null)
+    public static function getRoles($id = null)
     {
         $user = Auth::user();
-
         $query = JobRole::with(['recruiter', 'interviewer', 'level', 'skills']);
 
         if ($user && $user->isRecruiter()) {
-            $query->where('recruiter_id', $user->id);
+             $query->where('recruiter_id', $user->id);
         }
 
         if ($id) {
@@ -41,16 +40,12 @@ class JobRoleServices
                 'location'    => $role->location,
                 'is_remote'   => $role->is_remote,
                 'is_on_site'  => $role->is_on_site,
-
                 'recruiter_id'   => $role->recruiter->id ?? null,
                 'recruiter_name' => $role->recruiter->name ?? null,
-
                 'interviewer_id'   => $role->interviewer->id ?? null,
                 'interviewer_name' => $role->interviewer->name ?? null,
-
                 'level_id'   => $role->level->id ?? null,
                 'level_name' => $role->level->name ?? null,
-
                 'skills_list' => $role->skills->map(function ($skill) {
                     return [
                         'name'         => $skill->name,
@@ -106,10 +101,10 @@ class JobRoleServices
         return DB::select("
             SELECT j.id,j.title,j.is_remote,j.is_on_sight,COUNT(c.id) AS candidate_count
             FROM job_roles j
-            LEFT JOIN candidates c 
+            LEFT JOIN candidates c
                 ON c.job_role_id = j.id
             WHERE j.recruiter_id = ?
-            GROUP BY 
+            GROUP BY
                 j.id,
                 j.title,
                 j.is_remote,
@@ -119,7 +114,7 @@ class JobRoleServices
 
     public static function getCandidatesInStages(int $recruiter_id): array{
        $globalStages = self::getNumberInGlobalStages($recruiter_id);
-       $customStages = self::getNumberInCustomStages($recruiter_id);       
+       $customStages = self::getNumberInCustomStages($recruiter_id);
 
         return self::formatStatisticalReturn($globalStages , $customStages);
     }
@@ -164,7 +159,7 @@ class JobRoleServices
 
     private static function saveJobRole($request, $id)
     {
-        /** @var \App\Models\User|null $user */
+        /** @var \App\Models\User|null $user */  // <--- ADD THIS LINE
         $user = Auth::user();
 
         if ($id == 0) {
@@ -178,7 +173,6 @@ class JobRoleServices
                 throw new \Exception("No Job Role Found.");
             }
 
-            // Security Check for Updates
             if ($user && $user->isRecruiter() && $role->recruiter_id !== $user->id) {
                  throw new \Exception("Unauthorized: You can only edit your own job roles.");
             }
@@ -234,13 +228,7 @@ class JobRoleServices
     }
 
     static function deleteJobRole($id){
-        $user = Auth::user();
         $role = JobRole::findOrFail($id);
-
-        if ($user && $user->isRecruiter() && $role->recruiter_id !== $user->id) {
-            throw new \Exception("Unauthorized: You can only delete your own job roles.");
-        }
-
         $role->delete();
     }
 }
