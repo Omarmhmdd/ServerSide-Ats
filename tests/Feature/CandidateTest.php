@@ -23,11 +23,9 @@ class CandidateTest extends TestCase
     {
         parent::setUp();
 
-        // 1. Setup Roles
         $recruiterRole = UserRole::create(['name' => 'recruiter']);
         $interviewerRole = UserRole::create(['name' => 'interviewer']);
 
-        // 2. Setup Users
         $this->recruiter = User::create([
             'name' => 'Test Recruiter',
             'email' => 'recruiter@test.com',
@@ -44,7 +42,6 @@ class CandidateTest extends TestCase
             'role_id' => $interviewerRole->id
         ]);
 
-        // 3. Setup Job Role
         $level = Level::create(['name' => 'L4']);
 
         $this->jobRole = JobRole::create([
@@ -58,7 +55,6 @@ class CandidateTest extends TestCase
             'is_on_site' => false,
         ]);
 
-        // 4. Setup Candidate
         $this->candidate = Candidate::create([
             'job_role_id' => $this->jobRole->id,
             'recruiter_id' => $this->recruiter->id,
@@ -73,10 +69,7 @@ class CandidateTest extends TestCase
     {
         $this->actingAs($this->recruiter, 'api');
 
-        // Create an interviewer user (or use the one from setUp if available)
-        // Assuming $interviewer was created in your setUp but not assigned to a class property,
-        // we'll fetch the one linked to the job role or create a new one.
-        $interviewer = User::where('role_id', 4)->first() ?? User::factory()->create(['role_id' => 4]); // Role 4 = interviewer
+        $interviewer = User::where('role_id', 4)->first() ?? User::factory()->create(['role_id' => 4]);
 
         $payload = [
             'candidate_id' => $this->candidate->id,
@@ -86,12 +79,11 @@ class CandidateTest extends TestCase
             'schedule' => now()->addDays(2)->format('Y-m-d H:i:s'),
             'duration' => 30,
             'rubric' => 'a',
-            'meeting_link' => 'https://meet.google.com/abc-defg-hij', // Optional, can be null
+            'meeting_link' => 'https://meet.google.com/abc-defg-hij',
             'notes' => 'Initial screening interview',
             'status' => 'pending'
         ];
 
-        // Route: /api/v0.1/interviews
         $response = $this->postJson('/api/v0.1/interviews', $payload);
 
         $response->assertStatus(201)
@@ -106,18 +98,15 @@ class CandidateTest extends TestCase
                      ]
                  ]);
 
-        // Verify Interview was created in DB
         $this->assertDatabaseHas('interviews', [
             'candidate_id' => $this->candidate->id,
             'job_role_id' => $this->jobRole->id,
             'type' => 'Screening'
         ]);
 
-        // Verify Pipeline was automatically created/updated (Business Logic Check)
         $this->assertDatabaseHas('pipelines', [
             'candidate_id' => $this->candidate->id,
             'job_role_id' => $this->jobRole->id,
-            // InterviewService logic moves stage to 'screen' when interview is created
             'global_stages' => 'screen'
         ]);
     }
@@ -130,14 +119,12 @@ class CandidateTest extends TestCase
             'meta_data' => [
                 [
                     'json' => [
-                        // Missing candidate_id to trigger validation error
                         'personal_info' => []
                     ]
                 ]
             ]
         ];
 
-        // Correct Path: /api/v0.1/n8n/saveMetaData
         $response = $this->postJson('/api/v0.1/n8n/saveMetaData', $payload);
 
         $response->assertStatus(422)
@@ -148,7 +135,6 @@ class CandidateTest extends TestCase
     {
         $this->actingAs($this->recruiter, 'api');
 
-        // Correct Path: /api/v0.1/auth/candidate/getStatistics
         $response = $this->getJson('/api/v0.1/auth/candidate/getStatistics');
 
         $response->assertStatus(200)
@@ -166,10 +152,8 @@ class CandidateTest extends TestCase
     {
         $this->actingAs($this->recruiter, 'api');
 
-        // Correct Path: /api/v0.1/auth/candidate/getCandidateProgress/{id}
         $response = $this->getJson("/api/v0.1/auth/candidate/getCandidateProgress/{$this->candidate->id}");
 
-        // FIXED: Removed strict structure check on '*' because the array contains mixed types (strings + array)
         $response->assertStatus(200)
                  ->assertJsonStructure([
                      'data'
@@ -180,7 +164,6 @@ class CandidateTest extends TestCase
     {
         $this->actingAs($this->recruiter, 'api');
 
-        // Correct Path: /api/v0.1/auth/candidate/getDetails/{id}
         $response = $this->getJson("/api/v0.1/auth/candidate/getDetails/{$this->candidate->id}");
 
         $response->assertStatus(200)
