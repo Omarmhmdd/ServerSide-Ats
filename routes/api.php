@@ -14,7 +14,6 @@ use App\Http\Controllers\RagCopilotController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\CustomStageController;
-use App\Http\Controllers\OfferController;
 
 Route::group(["prefix" => "v0.1"], function () {
 

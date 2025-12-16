@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Jobs\IngestCandidateToRag;
 use App\Models\Candidate;
 use App\Models\Pipeline;
-use IngestCandidateToRag;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
