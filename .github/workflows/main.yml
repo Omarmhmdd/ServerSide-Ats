@@ -45,7 +45,7 @@ jobs:
           script: |
             cd /tmp
             rm -rf ServerSide-Ats-deploy
-            git clone https://github.com/Omarmhmdd/ServerSide-Ats.git ServerSide-Ats-deploy
+            git clone https://${{ secrets.TOKEN }}@github.com/Omarmhmdd/ServerSide-Ats.git ServerSide-Ats-deploy
             cd ServerSide-Ats-deploy
             sudo rsync -av --exclude='.git' --exclude='vendor' --exclude='node_modules' --exclude='storage' --exclude='.env' ./ /var/www/ServerSide-Ats/
             cd /var/www/ServerSide-Ats
