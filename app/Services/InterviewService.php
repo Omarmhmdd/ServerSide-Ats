@@ -53,7 +53,7 @@ class InterviewService {
         }
 
         $jobRole = JobRole::where('id', $candidate->job_role_id)
-            ->select('hiring_manager_id')
+            ->select('interviewer_id')
             ->first();
 
         if (!$jobRole) {
@@ -62,12 +62,12 @@ class InterviewService {
 
         return [
             'job_role_id' => $candidate->job_role_id,
-            'hiring_manager_id' => $jobRole->hiring_manager_id
+            'interviewer_id' => $jobRole->interviewer_id
         ];
     }
     private static function chooseNextBestSchedule($list_of_emails , $required_ids){
 
-        $last_interview_time = self::getLastInterviewTime($required_ids["hiring_manager_id"]);
+        $last_interview_time = self::getLastInterviewTime($required_ids["interviewer_id"]);
 
         // interview window from 8 am -> 2 pm
         $start_time = Carbon::parse('08:00');
@@ -83,11 +83,11 @@ class InterviewService {
            $next_interview_time = self::determineNextInterviewTime($last_interview_time , $end_time);
         }
 
-        return self::createSchedules($list_of_emails , $next_interview_time  ,$required_ids["hiring_manager_id"] , $end_time , $required_ids["job_role_id"]);
+        return self::createSchedules($list_of_emails , $next_interview_time  ,$required_ids["interviewer_id"] , $end_time , $required_ids["job_role_id"]);
 
     }
-    private static function getLastInterviewTime($hiring_manager_id){
-         return Interview::where('interviewer_id', $hiring_manager_id)
+    private static function getLastInterviewTime($interviewer_id){
+         return Interview::where('interviewer_id', $interviewer_id)
             ->orderBy('schedule', 'desc')
             ->value('schedule');
     }
@@ -110,20 +110,20 @@ class InterviewService {
 
         return $next_interview_time;
     }
-    private static function createSchedules($list_of_emails , $next_interview_time , $hiring_manager_id , $end_time , $job_role_id){
+    private static function createSchedules($list_of_emails , $next_interview_time , $interviewer_id , $end_time , $job_role_id){
         $list_of_new_interviews = [];
          foreach ($list_of_emails as $candidate_id => $email) {
 
             $new_interview = new Interview([
                 'candidate_id'   => $candidate_id,
-                'interviewer_id' => $hiring_manager_id,
+                'interviewer_id' => $interviewer_id,
                 'schedule'       => $next_interview_time,
                 'job_role_id' => $job_role_id,
                 'type' => 'screen',
                 'duration' => 20,
-                'meeting_link' => null,
-                'rubric' => null,
-                'notes' => null,
+                'meeting_link' => '',
+                'rubric' => '',
+                'notes' => '',
                 'status' => 'pending',
             ]);
 
@@ -147,13 +147,24 @@ class InterviewService {
             $user_pipeline = Pipeline::where('candidate_id' , $candidate_id)
                                     ->where('job_role_id' , $required_ids["job_role_id"])
                                     ->first();
-            $user_pipeline->global_stages = "screen"; // Use plural: global_stages
-            $user_pipeline->custom_stage_id = null; // null when in global stage
-            $user_pipeline->interview_id = $list_of_interviews[$interview_index++]->id;
+
+            if (!$user_pipeline) {
+                $user_pipeline = new Pipeline();
+                $user_pipeline->candidate_id = $candidate_id;
+                $user_pipeline->job_role_id = $required_ids["job_role_id"];
+            }
+
+            $user_pipeline->global_stages = "screen";
+
+            if (isset($list_of_interviews[$interview_index])) {
+                $user_pipeline->interview_id = $list_of_interviews[$interview_index]->id;
+            }
+
             $user_pipeline->save();
+
+            $interview_index++;
         }
 
-        // call n8n to send emails
         self::callN8nToSendEmails($list_of_emails , $list_of_interviews);
     }
 

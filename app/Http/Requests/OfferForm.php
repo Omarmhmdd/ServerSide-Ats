@@ -22,7 +22,7 @@ class OfferForm extends FormRequest
     public function rules(): array
     {
         return [
-            'candidate_id' => 'required|integer|exists:candidate,id',
+            'candidate_id' => 'required|integer|exists:candidates,id',
             'role_id' => 'required|integer|exists:job_roles,id',
             'base_salary' => 'required|integer',
             'equity' => 'required|integer',
