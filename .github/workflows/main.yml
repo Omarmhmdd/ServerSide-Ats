@@ -42,8 +42,5 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-                cd /home/ubuntu
-                ls -la
-                find . -name "artisan" -type f 2>/dev/null
-                find . -name "composer.json" -type f 2>/dev/null
-                pwd
+                find / -name "artisan" -type f 2>/dev/null
+                find / -name "composer.json" -type f 2>/dev/null
