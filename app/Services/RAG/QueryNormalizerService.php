@@ -3,7 +3,7 @@
 namespace App\Services\RAG;
 
 use App\Services\PromptLoaderService;
-use OpenAI;
+use OpenAI\Laravel\Facades\OpenAI;
 
 class QueryNormalizerService
 {

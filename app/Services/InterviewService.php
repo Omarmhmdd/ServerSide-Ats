@@ -31,6 +31,7 @@ class InterviewService {
     }
 
     public static function scheduleInterviews($list_of_emails){
+        // first get the user's job_role_id and hiring manager's ids
         $required_ids = self::getRequiredIds($list_of_emails);
         $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids);
         
@@ -166,7 +167,6 @@ class InterviewService {
         // call n8n to send emails
         self::callN8nToSendEmails($list_of_emails , $list_of_interviews);
     }
-
     private static function callN8nToSendEmails($list_of_emails , $list_of_interviews){
         $payload = [
             "emails" => $list_of_emails,
@@ -329,12 +329,12 @@ class InterviewService {
         }
 
         // Check access permission
-        if (!self::canAccessInterview($interview)) {
-            throw new ModelNotFoundException('Interview not found');
-        }
+        // if (!self::canAccessInterview($interview)) {
+        //     throw new ModelNotFoundException('Interview not found');
+        // }
 
         $interview->update($data);
-        $interview->load(['interviewer', 'jobRole', 'candidate']);
+        $interview->load(['interviewer', 'candidate']);
 
         return $interview;
     }

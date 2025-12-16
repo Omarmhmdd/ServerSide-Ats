@@ -1,6 +1,6 @@
 <?php
 
-namespace App\CV\Services;
+namespace App\Services\CV;
 
 use Exception;
 use Illuminate\Support\Facades\Http;

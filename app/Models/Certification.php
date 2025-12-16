@@ -11,6 +11,7 @@ class Certification extends Model
         'name',
         'issuing_organization',
         'issue_date',
+        'expiration_date',
         'credential_id',
         'credential_url',
     ];
