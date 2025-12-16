@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Offer;
-use Date;
+use Carbon\Traits\ToStringFormat;
 use Http as FacadesHttp;
 
 class OfferService{
@@ -22,9 +22,9 @@ class OfferService{
         $newOffer->bonus = $offer["bonus"];
         $newOffer->benifits = $offer["benifits"];
         $newOffer->start_date = $offer["start_date"];
-        $newOffer->status = "";
+        $newOffer->status = $offer["status"] ?? 'draft';
         $newOffer->expiry_date = $offer["expiry_date"];
-        $newOffer->sent_at = new Date.now();
+        $newOffer->sent_at = now();
         $newOffer->responded_at = null;
         $newOffer->contract_type = $offer["contract_type"];
 
