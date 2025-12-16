@@ -32,7 +32,7 @@ class InterviewService {
             "emails" => $list_of_emails,
             "interviews" => $list_of_interviews
         ];
-    $url = env('N8N_SEND_EMAIL_ENDPOINT', 'http://localhost:5678/webhook-test/sendEmails');
+    $url = env('N8N_SEND_EMAIL_ENDPOINT', 'http://localhost:5678/webhook-test/');
        FacadesHttp::post($url, $payload);
         self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews);
 
