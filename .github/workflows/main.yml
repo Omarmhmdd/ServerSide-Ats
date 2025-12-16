@@ -16,7 +16,6 @@ jobs:
           php-version: 8.4.1
       - name: Install Composer
         run: |
-            composer self-update 2.8.3
             composer install --no-interaction --no-progress --optimize-autoloader
       - name: Prepare Laravel 
         run: |
@@ -44,8 +43,7 @@ jobs:
           key: ${{ secrets.KEY }}
           script: |
             cd /var/www/ServerSide-Ats
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            git remote set-url origin git@github.com:Omarmhmdd/ServerSide-Ats.git
+            sudo chown -R ubuntu:ubuntu .
             git pull origin main
             composer install --no-dev --optimize-autoloader --no-interaction
             sudo chown -R www-data:www-data storage bootstrap/cache
@@ -53,4 +51,4 @@ jobs:
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
-            php artisan view:cachecache
+            php artisan view:cache
