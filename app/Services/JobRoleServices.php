@@ -7,6 +7,7 @@ use App\Models\JobRole;
 use App\Models\JobSkill;
 use App\Models\Level;
 use Error;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class JobRoleServices
@@ -16,41 +17,49 @@ class JobRoleServices
         return $levels;
     }
 
-    public static function getRoles($id = null)
-{
-    $query = JobRole::with(['recruiter', 'hiringManager', 'level', 'skills']);
+   public static function getRoles($id = null)
+    {
+        $user = Auth::user();
 
-    $roles = $id
-        ? $query->where('id', $id)->get()
-        : $query->get();
+        $query = JobRole::with(['recruiter', 'interviewer', 'level', 'skills']);
 
-    return $roles->map(function ($role) {
-        return [
-            'id'          => $role->id,
-            'title'       => $role->title,
-            'description' => $role->description,
-            'location'    => $role->location,
-            'is_remote'   => $role->is_remote,
-            'is_on_site'  => $role->is_on_site,
+        if ($user && $user->isRecruiter()) {
+            $query->where('recruiter_id', $user->id);
+        }
 
-            'recruiter_id'   => $role->recruiter->id ?? null,
-            'recruiter_name' => $role->recruiter->name ?? null,
+        if ($id) {
+            $query->where('id', $id);
+        }
 
-            'hiring_manager_id'   => $role->hiringManager->id ?? null,
-            'hiring_manager_name' => $role->hiringManager->name ?? null,
+        $roles = $query->get();
 
-            'level_id'   => $role->level->id ?? null,
-            'level_name' => $role->level->name ?? null,
+        return $roles->map(function ($role) {
+            return [
+                'id'          => $role->id,
+                'title'       => $role->title,
+                'description' => $role->description,
+                'location'    => $role->location,
+                'is_remote'   => $role->is_remote,
+                'is_on_site'  => $role->is_on_site,
 
-            'skills_list' => $role->skills->map(function ($skill) {
-                return [
-                    'name'         => $skill->name,
-                    'nice_to_have' => $skill->nice_to_have,
-                ];
-            }),
-        ];
-    });
-}
+                'recruiter_id'   => $role->recruiter->id ?? null,
+                'recruiter_name' => $role->recruiter->name ?? null,
+
+                'interviewer_id'   => $role->interviewer->id ?? null,
+                'interviewer_name' => $role->interviewer->name ?? null,
+
+                'level_id'   => $role->level->id ?? null,
+                'level_name' => $role->level->name ?? null,
+
+                'skills_list' => $role->skills->map(function ($skill) {
+                    return [
+                        'name'         => $skill->name,
+                        'nice_to_have' => $skill->nice_to_have,
+                    ];
+                }),
+            ];
+        });
+    }
 
     static function convertSkills($roles)
     {
@@ -155,16 +164,31 @@ class JobRoleServices
 
     private static function saveJobRole($request, $id)
     {
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+
         if ($id == 0) {
             $role = new JobRole();
+            if ($user && $user->isRecruiter()) {
+                $role->recruiter_id = $user->id;
+            }
         } else {
             $role = JobRole::find($id);
-            if (!$role && $id != 0) {
+            if (!$role) {
                 throw new \Exception("No Job Role Found.");
+            }
+
+            // Security Check for Updates
+            if ($user && $user->isRecruiter() && $role->recruiter_id !== $user->id) {
+                 throw new \Exception("Unauthorized: You can only edit your own job roles.");
             }
         }
 
         $role->fill($request->all());
+
+        if ($user && $user->isRecruiter()) {
+            $role->recruiter_id = $user->id;
+        }
 
         if ($role->save()) {
             return $role;
@@ -210,7 +234,13 @@ class JobRoleServices
     }
 
     static function deleteJobRole($id){
+        $user = Auth::user();
         $role = JobRole::findOrFail($id);
+
+        if ($user && $user->isRecruiter() && $role->recruiter_id !== $user->id) {
+            throw new \Exception("Unauthorized: You can only delete your own job roles.");
+        }
+
         $role->delete();
     }
 }

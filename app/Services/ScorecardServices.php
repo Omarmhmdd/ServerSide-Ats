@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ScoreCard;
 use Error;
+use Exception;
 
 class ScorecardServices
 {
@@ -48,5 +49,25 @@ class ScorecardServices
         static function deleteScoreCard($id){
         $role = ScoreCard::findOrFail($id);
         $role->delete();
+    }
+
+    public static function saveScorecard($data, $id)
+    {
+        if ($id == 0) {
+            $scorecard = new ScoreCard();
+        } else {
+            $scorecard = ScoreCard::find($id);
+            if (!$scorecard) {
+                throw new Exception("No Scorecard Found.");
+            }
+        }
+
+        $scorecard->fill($data);
+
+        if ($scorecard->save()) {
+            return $scorecard;
+        }
+
+        throw new Exception("Error Saving Scorecard.");
     }
 }

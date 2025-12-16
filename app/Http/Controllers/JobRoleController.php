@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\JobRoleServices;
-use Auth;
+
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class JobRoleController extends Controller
 {
@@ -27,7 +28,7 @@ class JobRoleController extends Controller
             return $this->errorResponse( 'Server Error: ' . $e->getMessage());
         }
     }
-    
+
     function addOrUpdateJobRole(Request $request,int $id = 0){
          try{
             $roles = JobRoleServices::addOrUpdateRole($request,$id);
