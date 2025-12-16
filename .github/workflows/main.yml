@@ -42,5 +42,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-                find / -name "artisan" -type f 2>/dev/null
-                find / -name "composer.json" -type f 2>/dev/null
+            cd /var/www/ServerSide-Ats
+            git pull origin main
+            composer install --no-dev --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
