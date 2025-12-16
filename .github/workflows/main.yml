@@ -52,5 +52,5 @@ jobs:
             sudo chmod -R 775 storage bootstrap/cache
             php artisan migrate --force
             php artisan config:cache
-  php artisan route:cache
-  php artisan view:cachecache
+            php artisan route:cache
+            php artisan view:cachecache
