@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\Candidate\CandidateService;
 use App\Http\Requests\metaDataRequest;
+use Auth;
 use Exception;
 use Log;
 
@@ -60,6 +61,16 @@ class CandidateController extends Controller
             return $this->successResponse($candidateInterviews);
         }catch(Exception $ex){
             return $this->errorResponse("Failed to get candidate's interviews" , 500 , ["1" => $ex->getMessage()]);
+        }
+    }
+
+    public function getStatistics(){
+        try{
+
+            $statistics = CandidateService::getStatistic(Auth::id());
+            return $this->successResponse($statistics);
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to get candidate's statistics" , 500 , ["1" => $ex->getMessage()]);
         }
     }
 

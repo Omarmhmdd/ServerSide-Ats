@@ -6,53 +6,15 @@ use App\Models\Candidate;
 use DB;
 
 class BuildCandidateMetaDataService{
+
     public static function buildInsertStrings(array $allMetaData){
-        $candidateRepositories        = [];
-        $candidateRepoTechnologies    = [];
-        $candidateSkills              = [];
-        $candidateLanguages           = [];
-        $candidateEducation           = [];
-        $candidateCertifications      = [];
-        $candidateProjects            = [];
-        $candidateProjectSkills       = [];
+        $containers = self::initializeInsertContainers();
 
-        $items = $allMetaData["meta_data"];
-        for($i = 0 ; $i < count($items); $i++){
-            $data = $items[$i]["json"];
-            $candidateId = $data["candidate_id"];
-            $repos       = $data["repositories"]["repositories"] ?? [];
-            $personal    = $data["personal_info"]["personal_info"] ?? [];
-            $skills      = $data["personal_info"]["skills"] ?? [];
-            $education   = $data["personal_info"]["education"] ?? [];
-            $certs       = $data["personal_info"]["certifications"] ?? [];
-            $projects    = $data["personal_info"]["projects"] ?? [];
-
-            // Build inserts
-            self::buildRepositories($candidateRepositories, $candidateRepoTechnologies, $candidateId, $repos);
-            self::buildSkills($candidateSkills, $candidateId, $skills);
-            self::buildLanguages($candidateLanguages, $candidateId, $personal);
-            self::buildEducation($candidateEducation, $candidateId, $education);
-            self::buildCertifications($candidateCertifications, $candidateId, $certs);
-            self::buildProjects($candidateProjects, $candidateProjectSkills, $candidateId, $projects);
-
-            // set candidate as processed
-            $candidate = Candidate::where('id' , $candidateId)->first();
-            if($candidate){
-                $candidate->processed = 1;
-                $candidate->save();
-            }
+        foreach ($allMetaData["meta_data"] as  $item) {
+            self::processCandidateMetaData($item, $containers);
         }
 
-        return [
-            "repositories"             => $candidateRepositories,
-            "repository_technologies"  => $candidateRepoTechnologies,
-            "detected_skills"          => $candidateSkills,
-            "detected_languages"       => $candidateLanguages,
-            "education"                => $candidateEducation,
-            "certifications"           => $candidateCertifications,
-            "projects"                 => $candidateProjects,
-            "project_skills"           => $candidateProjectSkills,
-        ];
+        return self::formatInsertResult($containers);
     }
 
     public static function bulkInsert($table, $data)
@@ -62,12 +24,7 @@ class BuildCandidateMetaDataService{
         }
     }
 
-    public static function buildRepositories(
-        array &$reposArray,
-        array &$techArray,
-        $candidateId,
-        array $repos
-    ) {
+    public static function buildRepositories(array &$reposArray,array &$techArray,$candidateId,array $repos) {
         foreach ($repos as $repo) {
             $repoId = uniqid(); // temp id for mapping tech rows before DB insert
 
@@ -154,12 +111,7 @@ class BuildCandidateMetaDataService{
         }
     }
 
-    public static function buildProjects(
-        array &$projectArray,
-        array &$skillArray,
-        $candidateId,
-        array $projects
-    ) {
+    public static function buildProjects(array &$projectArray,array &$skillArray,$candidateId,array $projects) {
         foreach ($projects as $proj) {
             $projId = uniqid();
 
@@ -185,5 +137,79 @@ class BuildCandidateMetaDataService{
                 ];
             }
         }
+    }
+
+    private static function initializeInsertContainers(){
+        return [
+            'repositories'            => [],
+            'repository_technologies' => [],
+            'detected_skills'         => [],
+            'detected_languages'      => [],
+            'education'               => [],
+            'certifications'          => [],
+            'projects'                => [],
+            'project_skills'          => [],
+        ];
+    }
+
+    private static function processCandidateMetaData(array $item, array &$containers): void{
+        $data        = $item['json'] ?? [];
+        $candidateId = $data['candidate_id'] ?? null;
+
+        if (!$candidateId) {
+            return;
+        }
+
+        self::buildCandidateInserts($candidateId, $data, $containers);
+        self::markCandidateAsProcessed($candidateId);
+    }
+
+    private static function buildCandidateInserts(int $candidateId,array $data,array &$containers): void {
+        self::buildRepositories(
+            $containers['repositories'],
+            $containers['repository_technologies'],
+            $candidateId,
+            $data['repositories']['repositories'] ?? []
+        );
+
+        self::buildSkills(
+            $containers['detected_skills'],
+            $candidateId,
+            $data['personal_info']['skills'] ?? []
+        );
+
+        self::buildLanguages(
+            $containers['detected_languages'],
+            $candidateId,
+            $data['personal_info']['personal_info'] ?? []
+        );
+
+        self::buildEducation(
+            $containers['education'],
+            $candidateId,
+            $data['personal_info']['education'] ?? []
+        );
+
+        self::buildCertifications(
+            $containers['certifications'],
+            $candidateId,
+            $data['personal_info']['certifications'] ?? []
+        );
+
+        self::buildProjects(
+            $containers['projects'],
+            $containers['project_skills'],
+            $candidateId,
+            $data['personal_info']['projects'] ?? []
+        );
+    }
+
+    private static function markCandidateAsProcessed(int $candidateId): void{
+        Candidate::where('id', $candidateId)
+            ->update(['processed' => 1]);
+    }
+
+    private static function formatInsertResult(array $containers){
+        return $containers;
     }
 }

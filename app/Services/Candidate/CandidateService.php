@@ -20,6 +20,7 @@ use App\Services\MetaDataService\ProjectMetaData;
 use App\Services\MetaDataService\RepositoryMetaData;
 use DB;
 use Exception;
+use function Laravel\Prompts\select;
 
 class CandidateService{
     public static function saveMetaData(array $allMetaData){
@@ -66,9 +67,7 @@ class CandidateService{
         $items = $allMetaData["meta_data"];
         for($i = 0; $i < count($items); $i++){
             $data = $items[$i]['json'];
-            $candidate = Candidate::where('id', $data["candidate_id"])
-                    ->select('email')
-                    ->first();
+            $candidate = self::getCandidateEmail($data);
 
             if ($candidate) {
                 $listOfEmails[$data["candidate_id"]] = $candidate->email;
@@ -129,6 +128,55 @@ class CandidateService{
         $stages[] = $liveStage;
 
         return $stages;
+    }
+
+    public static function getStatistic(int $recruiterId){
+        // number of applications
+        $applications = Candidate::where('recruiter_id', $recruiterId)
+            ->count();
+
+        // offers
+        $offers = DB::table('pipelines')
+            ->where('global_stages', 'offer')
+            ->whereIn('job_role_id', function ($query) use ($recruiterId) {
+                $query->select('id')
+                    ->from('job_roles')
+                    ->where('recruiter_id', $recruiterId);
+            })
+            ->count();
+
+        // hires
+        $hired = DB::table('pipelines')
+            ->where('global_stages', 'hired')
+            ->whereIn('job_role_id', function ($query) use ($recruiterId) {
+                $query->select('id')
+                    ->from('job_roles')
+                    ->where('recruiter_id', $recruiterId);
+            })
+            ->count();
+
+        // rejectees
+        $rejected = DB::table('pipelines')
+            ->where('global_stages', 'rejected')
+            ->whereIn('job_role_id', function ($query) use ($recruiterId) {
+                $query->select('id')
+                    ->from('job_roles')
+                    ->where('recruiter_id', $recruiterId);
+            })
+            ->count();
+
+        return [
+            'applications' => $applications,
+            'offers'       => $offers,
+            'hired'        => $hired,
+            'rejected'     => $rejected,
+        ];
+    }
+
+    private static function getCandidateEmail($data){
+        return Candidate::where('id', $data["candidate_id"])
+                    ->select('email')
+                    ->first();
     }
 
     private static function getCandidate(int $candidateId){

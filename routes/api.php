@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HiringManagerController;
 use App\Http\Controllers\JobRoleController;
+use App\Http\Controllers\OfferController;
 use App\Http\Controllers\RecruiterController;
 use App\Services\Candidate\CandidateService;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,8 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get("/{id?}", [JobRoleController::class,"getJobRoles"]);
             Route::post("/add_update_job_role", [JobRoleController::class,"addOrUpdateJobRole"]);
             Route::post("/delete_role/{id?}", [JobRoleController::class,"deleteJobRole"]);
+            Route::get('/getCandidateInEachRole' , [JobRoleController::class , 'getCandidateCountsInEachRole']);
+            Route::get('/getCandidateInEachStage' , [JobRoleController::class , "getCandidateInEachStage"]);
         });
         
         // CANDIDATES
@@ -41,6 +44,11 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::get('/getCandidates/allJobRoles/{recruiter_id}' , [CandidateController::class , 'getCandidatesAllJobRoles']);
             Route::get('/getCandidateProgress/{candidate_id}' , [CandidateController::class , 'getCandidateProgress']);
             Route::get('/getInterviews/{candidate_id}' , [CandidateController::class , 'getCandidateInterview']);
+            Route::get('/getStatistics' , [CandidateController::class , 'getStatistics']);
+        });
+
+        Route::group(["prefix" => "offer"] , function(){
+            Route::post("/create" , [OfferController::class , 'createOffer']);
         });
 
         // COPILOT
