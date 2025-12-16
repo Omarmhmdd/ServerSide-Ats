@@ -429,18 +429,22 @@ class InterviewService {
 
     public static function MarkAsComplete($id){
 
+        $interview = self::getInterviewById($id);
         $interview = self::updateInterviewStatus($id,'completed');
 
         $url = "http://localhost:5678/webhook-test/complete_interview";
         FacadesHttp::post($url,[
             'candidate_id' => $interview->candidate_id,
             'interview_id' => $interview->id,
+            'candidate_email' => $interview->candidate->email,
+            'interviewer_email' => $interview->interviewer->email,
+            'interviewer_name' => $interview->interviewer->name,
+            'type' => $interview->type,
             'candidate_name' => $interview->candidate->first_name,
             'role_title' => $interview->jobRole->title,
             'interview_type' => $interview->type,
             'interview_notes' => $interview->notes,
         ]);
-        echo "hi";
         return $interview;
     }
 
@@ -450,42 +454,20 @@ class InterviewService {
 
             $input = $request->validated();
 
-            $dataToSave = [
+            $data_to_save = [
                 'interview_id'              => $input['interview_id'],
                 'candidate_id'              => $input['candidate_id'],
-
                 'criteria'                   => json_encode($input['scorecard']),
-
                 'summary'                   => $input['summary'],
-
                 'written_evidence'          => $input['scorecard']['communication']['evidence'] ?? 'See criteria for details',
-
-                'overall_recommendation_id' => "1",
+                'overall_recommendation' => $input['overall_recommendation'],
             ];
 
-            return self::saveScorecard($dataToSave, 0);
+            return ScorecardServices::saveScorecard($data_to_save, 0);
         });
     }
 
-    private static function saveScorecard($data, $id)
-    {
-        if ($id == 0) {
-            $scorecard = new ScoreCard();
-        } else {
-            $scorecard = ScoreCard::find($id);
-            if (!$scorecard) {
-                throw new Exception("No Scorecard Found.");
-            }
-        }
 
-        $scorecard->fill($data);
-
-        if ($scorecard->save()) {
-            return $scorecard;
-        }
-
-        throw new Exception("Error Saving Scorecard.");
-    }
 }
 
 

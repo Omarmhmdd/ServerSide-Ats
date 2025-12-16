@@ -10,10 +10,10 @@ class ScoreCard extends Model
     protected $fillable = [
         'interview_id',
         'candidate_id',
-        'overall_recommnedation_id',
+        'overall_recommendation',
         'summary',
         'written_evidence',
-        'ctieria',
+        'criteria',
     ];
 
     // Casts
