@@ -48,7 +48,7 @@ jobs:
             DB_DATABASE: ats_system_test
             DB_USERNAME: root
             DB_PASSWORD: root
-            JWT_SECRET: testing_secret_1234567890
+            JWT_SECRET: testing_secret_1234567890_long_secure_key_123456
           run: php artisan test
   cd: 
      runs-on: ubuntu-latest
