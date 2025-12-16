@@ -8,7 +8,7 @@ class Interview extends Model
 {
      protected $table = 'intreviews';
     protected $fillable = [
-        'intreveiwer_id',
+        'interveiwer_id',
         'job_role_id',
         'candidate_id',
         'type',
@@ -24,8 +24,7 @@ class Interview extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-     public function interviewer()
-    {
+    public function interviewer(){
         return $this->belongsTo(User::class, 'intreveiwer_id');
     }
 
@@ -34,7 +33,7 @@ class Interview extends Model
      */
     public function jobRole()
     {
-        return $this->belongsTo(JobRoles::class, 'job_role_id');
+        return $this->belongsTo(JobRole::class, 'job_role_id');
     }
 
     /**
@@ -43,6 +42,10 @@ class Interview extends Model
     public function candidate()
     {
         return $this->belongsTo(Candidate::class, 'candidate_id');
+    }
+
+    public function scoreCard(){
+        return $this->hasOne(ScoreCard::class , "interview_id" , 'id');
     }
 }
 

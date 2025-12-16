@@ -22,7 +22,7 @@ class Pipeline extends Model
 
     public function jobRole()
     {
-        return $this->belongsTo(JobRoles::class, 'job_role_id');
+        return $this->belongsTo(JobRole::class, 'job_role_id');
     }
 
     public function interview()
@@ -37,7 +37,7 @@ class Pipeline extends Model
 
     public function customStage()
     {
-        return $this->belongsTo(CustomStage::class, 'stage_id');
+        return $this->belongsTo(CustomStage::class, 'custom_stage_id');
     }
 
     /**
@@ -81,10 +81,6 @@ class Pipeline extends Model
         return null; // Already at final state
     }
 
-    /**
-     * Check if candidate can be rejected
-     * REQUIRED: Called by PipelineService::rejectCandidate() on line 227
-     */
     public function canReject(): bool
     {
         return $this->global_stages !== 'applied' 

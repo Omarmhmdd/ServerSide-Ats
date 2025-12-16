@@ -13,13 +13,11 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http as FacadesHttp;
-use Laravel\Pail\ValueObjects\Origin\Http as OriginHttp;
-use League\Uri\Http as UriHttp;
 
 
 class InterviewService {
     public static function scheduleInterviews($list_of_emails){
-        // first get the user's job_role_id and recruiter_id
+        // first get the user's job_role_id and hiring manager's ids
         $required_ids = self::getRequiredIds($list_of_emails);
 
         // then select best next time for the interviews
@@ -32,7 +30,9 @@ class InterviewService {
             "emails" => $list_of_emails,
             "interviews" => $list_of_interviews
         ];
+
         Http::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
+
         self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews); 
         
         return true;
@@ -148,7 +148,7 @@ class InterviewService {
                                     ->where('job_role_id' , $required_ids["job_role_id"])
                                     ->first();
             $user_pipeline->global_stages = "screen"; // Use plural: global_stages
-            $user_pipeline->stage_id = null; // null when in global stage
+            $user_pipeline->custom_stage_id = null; // null when in global stage
             $user_pipeline->intreview_id = $list_of_interviews[$interview_index++]->id;
             $user_pipeline->save();
         }
@@ -156,7 +156,6 @@ class InterviewService {
         // call n8n to send emails
         self::callN8nToSendEmails($list_of_emails , $list_of_interviews);
     }
-
     private static function callN8nToSendEmails($list_of_emails , $list_of_interviews){
         $payload = [
             "emails" => $list_of_emails,

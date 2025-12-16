@@ -100,6 +100,7 @@ class CandidateIngestionService{
     }
 
     protected function ingestSource(int $candidateId,string $text,string $sourceType,string $sourceLabel , string $sourceSection = "General" , array $extraPayload = []){
+        
         $chunks = $this->chunkText($text);
        
         $points = [];

@@ -8,7 +8,7 @@ class ScoreCard extends Model
 {
     // Fillable
     protected $fillable = [
-        'intreview_id',
+        'interview_id',
         'candidate_id',
         'overall_recommnedation_id',
         'summary',
@@ -21,5 +21,6 @@ class ScoreCard extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
 
 }

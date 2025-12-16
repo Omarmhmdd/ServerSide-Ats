@@ -79,6 +79,7 @@ class RagQueryService
     }
 
     public function answer(int $candidateId, string $question){
+
         $normalizedQuestion = $this->query_normalizer->normalize($question);
         $queryVector = $this->embed($normalizedQuestion);
         $chunks = $this->retrieve($candidateId, vector: $queryVector);
@@ -102,7 +103,7 @@ class RagQueryService
         // if it still fails then give up
         if (! $this->validateBulletFormat($answer)) {
             return [
-                'answer' => '- Not found in candidate data
+                'answer' => 'Not found in candidate data
                 Source: N/A',
             ];
         }
