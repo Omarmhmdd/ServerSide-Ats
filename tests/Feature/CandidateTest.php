@@ -69,33 +69,56 @@ class CandidateTest extends TestCase
         ]);
     }
 
-    public function test_can_save_candidate_metadata_successfully()
+    public function test_can_create_interview_for_candidate()
     {
         $this->actingAs($this->recruiter, 'api');
 
+        // Create an interviewer user (or use the one from setUp if available)
+        // Assuming $interviewer was created in your setUp but not assigned to a class property,
+        // we'll fetch the one linked to the job role or create a new one.
+        $interviewer = User::where('role_id', 4)->first() ?? User::factory()->create(['role_id' => 4]); // Role 4 = interviewer
+
         $payload = [
-            'meta_data' => [
-                [
-                    'json' => [
-                        'candidate_id' => $this->candidate->id,
-                        'personal_info' => [
-                            'personal_info' => ['full_name' => 'Jane Doe'],
-                            'skills' => ['PHP', 'Laravel']
-                        ]
-                    ]
-                ]
-            ]
+            'candidate_id' => $this->candidate->id,
+            'job_role_id' => $this->jobRole->id,
+            'interviewer_id' => $interviewer->id,
+            'type' => 'Screening',
+            'schedule' => now()->addDays(2)->format('Y-m-d H:i:s'),
+            'duration' => 30,
+            'rubric' => 'a',
+            'meeting_link' => 'https://meet.google.com/abc-defg-hij', // Optional, can be null
+            'notes' => 'Initial screening interview',
+            'status' => 'pending'
         ];
 
-        // Correct Path: /api + /v0.1 + /n8n + /saveMetaData
-        $response = $this->postJson('/api/v0.1/n8n/saveMetaData', $payload);
+        // Route: /api/v0.1/interviews
+        $response = $this->postJson('/api/v0.1/interviews', $payload);
 
-        $response->assertStatus(200)
-                 ->assertJson(['data' => ['message' => 'Meta data saved']]);
+        $response->assertStatus(201)
+                 ->assertJsonStructure([
+                     'data' => [
+                         'interview' => [
+                             'id',
+                             'candidate_id',
+                             'status',
+                             'schedule'
+                         ]
+                     ]
+                 ]);
 
-        $this->assertDatabaseHas('detected_skills', [
+        // Verify Interview was created in DB
+        $this->assertDatabaseHas('interviews', [
             'candidate_id' => $this->candidate->id,
-            'skill' => 'PHP'
+            'job_role_id' => $this->jobRole->id,
+            'type' => 'Screening'
+        ]);
+
+        // Verify Pipeline was automatically created/updated (Business Logic Check)
+        $this->assertDatabaseHas('pipelines', [
+            'candidate_id' => $this->candidate->id,
+            'job_role_id' => $this->jobRole->id,
+            // InterviewService logic moves stage to 'screen' when interview is created
+            'global_stages' => 'screen'
         ]);
     }
 
