@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('job_skills', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('role_id');
+            $table->bigInteger('job_role_id');
             $table->string('name');
             $table->tinyInteger('nice_to_have');
             $table->timestamps();
