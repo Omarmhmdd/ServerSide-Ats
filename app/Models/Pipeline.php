@@ -11,7 +11,7 @@ class Pipeline extends Model
         'job_role_id',
         'interview_id',
         'candidate_id',
-        'custom_custom_stage_id', // nullable - points to custom_stages
+        'custom_stage_id', // nullable - points to custom_stages
         'global_stages', // 'applied', 'screen', 'offer', 'hired', 'rejected', or null
     ];
 

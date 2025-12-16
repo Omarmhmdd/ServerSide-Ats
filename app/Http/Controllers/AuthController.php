@@ -16,7 +16,7 @@ class AuthController extends Controller{
         }
 
             $user = Auth::guard('api')->user();
-    $user->load('role');
+            $user->load('role');
         return $this->successResponse(["token" => $token , "user" => Auth::guard('api')->user()]);
     }
 

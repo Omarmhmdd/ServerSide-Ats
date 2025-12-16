@@ -8,12 +8,13 @@ use App\Services\PipelineService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
+use Exception;
+use RuntimeException;
 class PipelineController extends Controller
 {
-       protected PipelineService $pipelineService;
+    protected PipelineService $pipelineService;
 
-    public function __construct(PipelineService $pipelineService)
+        public function __construct(PipelineService $pipelineService)
     {
         $this->pipelineService = $pipelineService;
     }
@@ -24,7 +25,7 @@ class PipelineController extends Controller
         try {
             $pipelines = $this->pipelineService->getAllPipelines();
             return $this->successResponse(['pipelines' => $pipelines]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to fetch pipelines', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -38,7 +39,7 @@ class PipelineController extends Controller
                 'Pipeline entry created successfully',
                 201
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to create pipeline entry', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -51,7 +52,7 @@ class PipelineController extends Controller
             return $this->successResponse(['pipeline' => $pipeline]);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Pipeline entry not found', 404);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to fetch pipeline entry', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -66,7 +67,7 @@ class PipelineController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Pipeline entry not found', 404);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to update pipeline entry', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -78,7 +79,7 @@ class PipelineController extends Controller
             return $this->successResponse([], 'Pipeline entry deleted successfully');
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Pipeline entry not found', 404);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to delete pipeline entry', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -89,7 +90,7 @@ class PipelineController extends Controller
         try {
             $pipelines = $this->pipelineService->getPipelinesByJobRole($jobRoleId);
             return $this->successResponse(['pipelines' => $pipelines]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to fetch pipelines', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -100,7 +101,7 @@ class PipelineController extends Controller
         try {
             $pipelines = $this->pipelineService->getPipelinesByCandidate($candidateId);
             return $this->successResponse(['pipelines' => $pipelines]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to fetch pipelines', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -111,7 +112,7 @@ class PipelineController extends Controller
         try {
             $pipelines = $this->pipelineService->getPipelinesByStage($stageId);
             return $this->successResponse(['pipelines' => $pipelines]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to fetch pipelines', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -124,7 +125,7 @@ class PipelineController extends Controller
         try {
             $statistics = $this->pipelineService->getPipelineStatistics($jobRoleId);
             return $this->successResponse(['statistics' => $statistics]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to get statistics', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -139,9 +140,9 @@ class PipelineController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Pipeline entry not found', 404);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return $this->errorResponse($e->getMessage(), 400);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to move candidate', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -157,9 +158,9 @@ class PipelineController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Pipeline entry not found', 404);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return $this->errorResponse($e->getMessage(), 400);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to reject candidate', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -175,9 +176,9 @@ class PipelineController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Pipeline entry not found', 404);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return $this->errorResponse($e->getMessage(), 400);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to hire candidate', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -188,7 +189,7 @@ class PipelineController extends Controller
         try {
             $kanban = $this->pipelineService->getKanbanBoard($jobRoleId);
             return $this->successResponse(['kanban' => $kanban]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to get Kanban board', 500, ['error' => $e->getMessage()]);
         }
     }

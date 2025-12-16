@@ -16,27 +16,35 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http as FacadesHttp;
-use Laravel\Pail\ValueObjects\Origin\Http as OriginHttp;
-
+use InvalidArgumentException;
+use App\Models\User;
 
 class InterviewService {
+
+    protected ?User $user = null;
+
+    public function __construct(){
+        $this->user = Auth::user();
+        if ($this->user) {
+            $this->user->load('role');
+        }
+    }
+
     public static function scheduleInterviews($list_of_emails){
-
         $required_ids = self::getRequiredIds($list_of_emails);
-
-
         $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids);
-
-
+        
         $payload = [
             "emails" => $list_of_emails,
             "interviews" => $list_of_interviews
         ];
-       FacadesHttp::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
+        
+        FacadesHttp::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
         self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews);
-
+        
         return true;
     }
+
     private static function getRequiredIds(array $list_of_emails){
         if (empty($list_of_emails)) {
             throw new Exception("Empty list of emails");
@@ -49,7 +57,7 @@ class InterviewService {
             ->first();
 
         if (!$candidate) {
-           throw new Exception("Candidate not found");
+            throw new Exception("Candidate not found");
         }
 
         $jobRole = JobRole::where('id', $candidate->job_role_id)
@@ -65,8 +73,8 @@ class InterviewService {
             'hiring_manager_id' => $jobRole->hiring_manager_id
         ];
     }
-    private static function chooseNextBestSchedule($list_of_emails , $required_ids){
 
+    private static function chooseNextBestSchedule($list_of_emails , $required_ids){
         $last_interview_time = self::getLastInterviewTime($required_ids["hiring_manager_id"]);
 
         // interview window from 8 am -> 2 pm
@@ -84,16 +92,16 @@ class InterviewService {
         }
 
         return self::createSchedules($list_of_emails , $next_interview_time  ,$required_ids["hiring_manager_id"] , $end_time , $required_ids["job_role_id"]);
-
     }
+
     private static function getLastInterviewTime($hiring_manager_id){
          return Interview::where('interviewer_id', $hiring_manager_id)
             ->orderBy('schedule', 'desc')
             ->value('schedule');
     }
+
     private static function determineNextInterviewTime($last_interview_time , $end_time){
         $next_interview_time = Carbon::parse($last_interview_time)->addMinutes(20);
-
 
         $oneWeekFromNow = now()->addWeek();
         if ($next_interview_time->lt($oneWeekFromNow)) {
@@ -102,18 +110,17 @@ class InterviewService {
                 ->setTime(8, 0);
         }
 
-
         if ($next_interview_time->format('H:i') > $end_time->format('H:i')) {
-
             $next_interview_time = $next_interview_time->addDay()->setTime(8, 0);
         }
 
         return $next_interview_time;
     }
+
     private static function createSchedules($list_of_emails , $next_interview_time , $hiring_manager_id , $end_time , $job_role_id){
         $list_of_new_interviews = [];
+        
          foreach ($list_of_emails as $candidate_id => $email) {
-
             $new_interview = new Interview([
                 'candidate_id'   => $candidate_id,
                 'interviewer_id' => $hiring_manager_id,
@@ -128,8 +135,8 @@ class InterviewService {
             ]);
 
             $new_interview->save();
-
             $list_of_new_interviews[] = $new_interview;
+
             // update time
             $next_interview_time->addMinutes(20);
 
@@ -141,14 +148,17 @@ class InterviewService {
 
         return $list_of_new_interviews;
     }
+
     private static function moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews){
         $interview_index = 0;
+        
         foreach($list_of_emails as $candidate_id => $email){
             $user_pipeline = Pipeline::where('candidate_id' , $candidate_id)
                                     ->where('job_role_id' , $required_ids["job_role_id"])
                                     ->first();
-            $user_pipeline->global_stages = "screen"; // Use plural: global_stages
-            $user_pipeline->custom_stage_id = null; // null when in global stage
+
+            $user_pipeline->global_stages = "screen";
+            $user_pipeline->custom_stage_id = null;
             $user_pipeline->interview_id = $list_of_interviews[$interview_index++]->id;
             $user_pipeline->save();
         }
@@ -164,7 +174,6 @@ class InterviewService {
         ];
        FacadesHttp::post("http://localhost:5678/webhook-test/sendEmails" , $payload);
     }
-
 
     private static function canAccessInterview(Interview $interview): bool
     {
@@ -204,44 +213,38 @@ class InterviewService {
         return true;
     }
 
-
-    private static function getRecruiterJobRoleIds(): array
+    private function getRecruiterJobRoleIds(): array
     {
-        /** @var \App\Models\User|null $user */
-        $user = Auth::user();
-
-        if (!$user) {
+        if (!$this->user) {
             return [];
         }
 
         // Load role relationship if not already loaded
-        if (!isset($user->role)) {
-            $user->load('role');
+        if (!isset($this->user->role)) {
+            $this->user->load('role');
         }
 
-        if (!$user->isRecruiter()) {
+        if (!$this->user->isRecruiter()) {
             return [];
         }
 
-        return JobRole::where('recruiter_id', $user->id)
+        return JobRole::where('recruiter_id', $this->user->id)
             ->pluck('id')
             ->toArray();
     }
 
-    public static function getAllInterviews(): Collection{
-        $user = Auth::user();
-
+    public function getAllInterviews(): Collection
+    {
         $query = Interview::with(['interviewer', 'jobRole', 'candidate']);
 
         // Filter by recruiter's job roles if not admin
-        if ($user) {
-            /** @var \App\Models\User $user */
-            if (!isset($user->role)) {
-                $user->load('role');
+        if ($this->user) {
+            if (!isset($this->user->role)) {
+                $this->user->load('role');
             }
 
-            if ($user->isRecruiter()) {
-                $jobRoleIds = self::getRecruiterJobRoleIds();
+            if ($this->user->isRecruiter()) {
+                $jobRoleIds = $this->getRecruiterJobRoleIds();
                 if (!empty($jobRoleIds)) {
                     $query->whereIn('job_role_id', $jobRoleIds);
                 } else {
@@ -253,7 +256,8 @@ class InterviewService {
         return $query->latest()->get();
     }
 
-    public static function getInterviewById(int $id): Interview{
+    public static function getInterviewById(int $id): Interview
+    {
         $interview = Interview::with(['interviewer', 'jobRole', 'candidate'])
             ->find($id);
 
@@ -269,19 +273,17 @@ class InterviewService {
         return $interview;
     }
 
-    public static function createInterview(array $data): Interview{
-        $user = Auth::user();
-
+    public function createInterview(array $data): Interview
+    {
         // Check if job role belongs to recruiter
-        if ($user) {
-            /** @var \App\Models\User $user */
-            if (!isset($user->role)) {
-                $user->load('role');
+        if ($this->user) {
+            if (!isset($this->user->role)) {
+                $this->user->load('role');
             }
 
-            if ($user->isRecruiter()) {
+            if ($this->user->isRecruiter()) {
                 $jobRole = JobRole::find($data['job_role_id']);
-                if (!$jobRole || $jobRole->recruiter_id !== $user->id) {
+                if (!$jobRole || $jobRole->recruiter_id !== $this->user->id) {
                     throw new ModelNotFoundException('Job role not found');
                 }
             }
@@ -300,7 +302,7 @@ class InterviewService {
             $pipeline = Pipeline::create([
                 'candidate_id' => $data['candidate_id'],
                 'job_role_id' => $data['job_role_id'],
-                'global_stages' => 'screen', // Interview means they're in screening stage
+                'global_stages' => 'screen',
                 'custom_stage_id' => null,
                 'interview_id' => $interview->id,
             ]);
@@ -318,7 +320,8 @@ class InterviewService {
         return $interview;
     }
 
-    public static function updateInterview(int $id, array $data): Interview{
+    public static function updateInterview(int $id, array $data): Interview
+    {
         $interview = Interview::find($id);
 
         if (!$interview) {
@@ -336,7 +339,8 @@ class InterviewService {
         return $interview;
     }
 
-    public static function deleteInterview(int $id): bool{
+    public static function deleteInterview(int $id): bool
+    {
         $interview = Interview::find($id);
 
         if (!$interview) {
@@ -351,21 +355,19 @@ class InterviewService {
         return $interview->delete();
     }
 
-    public static function getInterviewsByCandidate(int $candidateId): Collection{
-        $user = Auth::user();
-
+    public function getInterviewsByCandidate(int $candidateId): Collection
+    {
         $query = Interview::with(['interviewer', 'jobRole', 'candidate'])
             ->where('candidate_id', $candidateId);
 
         // Filter by recruiter's job roles if not admin
-        if ($user) {
-            /** @var \App\Models\User $user */
-            if (!isset($user->role)) {
-                $user->load('role');
+        if ($this->user) {
+            if (!isset($this->user->role)) {
+                $this->user->load('role');
             }
 
-            if ($user->isRecruiter()) {
-                $jobRoleIds = self::getRecruiterJobRoleIds();
+            if ($this->user->isRecruiter()) {
+                $jobRoleIds = $this->getRecruiterJobRoleIds();
                 if (!empty($jobRoleIds)) {
                     $query->whereIn('job_role_id', $jobRoleIds);
                 } else {
@@ -377,21 +379,19 @@ class InterviewService {
         return $query->latest()->get();
     }
 
-    public static function getInterviewsByInterviewer(int $interviewerId): Collection{
-        $user = Auth::user();
-
+    public function getInterviewsByInterviewer(int $interviewerId): Collection
+    {
         $query = Interview::with(['interviewer', 'jobRole', 'candidate'])
             ->where('interviewer_id', $interviewerId);
 
         // Filter by recruiter's job roles if not admin
-        if ($user) {
-            /** @var \App\Models\User $user */
-            if (!isset($user->role)) {
-                $user->load('role');
+        if ($this->user) {
+            if (!isset($this->user->role)) {
+                $this->user->load('role');
             }
 
-            if ($user->isRecruiter()) {
-                $jobRoleIds = self::getRecruiterJobRoleIds();
+            if ($this->user->isRecruiter()) {
+                $jobRoleIds = $this->getRecruiterJobRoleIds();
                 if (!empty($jobRoleIds)) {
                     $query->whereIn('job_role_id', $jobRoleIds);
                 } else {
@@ -403,11 +403,12 @@ class InterviewService {
         return $query->latest()->get();
     }
 
-    public static function updateInterviewStatus(int $id, string $status): Interview{
+    public static function updateInterviewStatus(int $id, string $status): Interview
+    {
         $validStatuses = ['no show', 'completed', 'canceled', 'posptponed', 'pending'];
 
         if (!in_array($status, $validStatuses)) {
-            throw new \InvalidArgumentException('Invalid status provided');
+            throw new InvalidArgumentException('Invalid status provided');
         }
 
         $interview = Interview::find($id);
@@ -427,8 +428,8 @@ class InterviewService {
         return $interview;
     }
 
-    public static function MarkAsComplete($id){
-
+    public static function MarkAsComplete($id)
+    {
         $interview = self::updateInterviewStatus($id,'completed');
 
         $url = "http://localhost:5678/webhook-test/complete_interview";
@@ -440,6 +441,7 @@ class InterviewService {
             'interview_type' => $interview->type,
             'interview_notes' => $interview->notes,
         ]);
+
         echo "hi";
         return $interview;
     }
@@ -447,19 +449,14 @@ class InterviewService {
     public static function createScoreCard($request)
     {
         return DB::transaction(function () use ($request) {
-
             $input = $request->validated();
 
             $dataToSave = [
                 'interview_id'              => $input['interview_id'],
                 'candidate_id'              => $input['candidate_id'],
-
                 'criteria'                   => json_encode($input['scorecard']),
-
                 'summary'                   => $input['summary'],
-
                 'written_evidence'          => $input['scorecard']['communication']['evidence'] ?? 'See criteria for details',
-
                 'overall_recommendation_id' => "1",
             ];
 
@@ -487,7 +484,3 @@ class InterviewService {
         throw new Exception("Error Saving Scorecard.");
     }
 }
-
-
-
-

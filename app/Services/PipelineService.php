@@ -10,33 +10,28 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-
+use App\Services\OfferWorkflowService;
+use RuntimeException;
+use App\Models\Offer;
 class PipelineService
 {
-  protected ?User $user = null;
+    protected ?User $user = null;
     protected ?array $recruiterJobRoleIds = null;
-   
-    public function __construct()
-    {
-        // Get authenticated user once
+
+    public function __construct(){ 
         $this->user = Auth::user();
-        
-        // Load role relationship if user exists
         if ($this->user) {
             $this->user->load('role');
         }
     }
     
-    private function canAccessPipeline(Pipeline $pipeline): bool
-    {
-        
-        
+    private function canAccessPipeline(Pipeline $pipeline): bool{
         if (!$this->user) {
             return false;
         }
         
         if (!isset($this->user->role)) {
-           $this->user->load('role');
+            $this->user->load('role');
         }
         if ($this->user->isAdmin()) {
             return true;
@@ -53,10 +48,9 @@ class PipelineService
             return true;
     }
 
-   
     private function getRecruiterJobRoleIds(): array
     {
-       
+
         
         if (!$this->user) {
             return [];
@@ -78,7 +72,7 @@ class PipelineService
 
     public function getAllPipelines(): Collection
     {
-      
+
         
         $query = Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview']);
         
@@ -86,7 +80,7 @@ class PipelineService
         if ($this->user) {
             
             if (!isset($this->user->role)) {
-               $this->user->load('role');
+                $this->user->load('role');
             }
             
             if ($this->user->isRecruiter()) {
@@ -102,7 +96,7 @@ class PipelineService
         return $query->latest()->get();
     }
 
-   
+
     public function getPipelineById(int $id): Pipeline
     {
         $pipeline = Pipeline::with(['jobRole', 'candidate', 'customStage', 'interview'])
@@ -120,7 +114,7 @@ class PipelineService
         return $pipeline;
     }
 
-   
+
     public function createPipeline(array $data): Pipeline
     {
         // Check if pipeline already exists for this candidate and job role
@@ -161,24 +155,42 @@ class PipelineService
     }
 
 
-    public function updatePipeline(int $id, array $data): Pipeline
-    {
-        $pipeline = Pipeline::find($id);
+        public function updatePipeline(int $id, array $data): Pipeline
+        {
+            $pipeline = Pipeline::find($id);
 
-        if (!$pipeline) {
-            throw new ModelNotFoundException('Pipeline entry not found');
+            if (!$pipeline) {
+                throw new ModelNotFoundException('Pipeline entry not found');
+            }
+
+            // Check access permission
+            if (!$this->canAccessPipeline($pipeline)) {
+                throw new ModelNotFoundException('Pipeline entry not found');
+            }
+
+            // If trying to set stage to 'offer', validate that offer exists
+            if (isset($data['global_stages']) && $data['global_stages'] === 'offer') {
+                $offer = Offer::where('candidate_id', $pipeline->candidate_id)
+                    ->where('role_id', $pipeline->job_role_id)
+                    ->first();
+                
+                if (!$offer) {
+                    throw new RuntimeException('Cannot move to offer stage. Please create an offer first for this candidate and job role.');
+                }
+                
+                // Trigger n8n workflow after updating to offer stage
+                $pipeline->update($data);
+                $pipeline->load(['jobRole', 'candidate', 'customStage', 'interview']);
+                OfferWorkflowService::handleOfferStage($pipeline);
+                
+                return $pipeline;
+            }
+
+            $pipeline->update($data);
+            $pipeline->load(['jobRole', 'candidate', 'customStage', 'interview']);
+
+            return $pipeline;
         }
-
-        // Check access permission
-        if (!$this->canAccessPipeline($pipeline)) {
-            throw new ModelNotFoundException('Pipeline entry not found');
-        }
-
-        $pipeline->update($data);
-        $pipeline->load(['jobRole', 'candidate', 'customStage', 'interview']);
-
-        return $pipeline;
-    }
 
 
     public function deletePipeline(int $id): bool
@@ -331,7 +343,7 @@ class PipelineService
         $next = $pipeline->getNextStage();
 
         if (!$next) {
-            throw new \RuntimeException('Cannot move forward. Already at final state.');
+            throw new RuntimeException('Cannot move forward. Already at final state.');
         }
 
         if ($next === 'screen') {
@@ -339,11 +351,24 @@ class PipelineService
                 'global_stages' => 'screen',
                 'custom_stage_id' => null,
             ]);
-        } elseif ($next === 'offer') {
-            $pipeline->update([
-                'global_stages' => 'offer',
-                'custom_stage_id' => null,
-            ]);
+        }  elseif ($next === 'offer') {
+                    // Check if offer exists before allowing move to offer stage
+                    $offer = \App\Models\Offer::where('candidate_id', $pipeline->candidate_id)
+                        ->where('role_id', $pipeline->job_role_id)
+                        ->first();
+                    
+                    if (!$offer) {
+                        throw new RuntimeException('Cannot move to offer stage. Please create an offer first for this candidate and job role.');
+                    }
+                    
+                    $pipeline->update([
+                        'global_stages' => 'offer',
+                        'custom_stage_id' => null,
+                    ]);
+    
+                //Call offer workflow for n8n to know stage
+                OfferWorkflowService::handleOfferStage($pipeline->fresh());
+
         } elseif ($next === 'hired') {
             $pipeline->update([
                 'global_stages' => 'hired',
@@ -374,7 +399,7 @@ class PipelineService
         }
 
         if (!$pipeline->canReject()) {
-            throw new \RuntimeException('Cannot reject candidate. Candidate must be in screen stage or above.');
+            throw new RuntimeException('Cannot reject candidate. Candidate must be in screen stage or above.');
         }
 
         $pipeline->update([
@@ -401,7 +426,7 @@ class PipelineService
 
         // Check if candidate has completed all custom stages
         if (!$pipeline->hasCompletedAllCustomStages() && $pipeline->custom_stage_id) {
-            throw new \RuntimeException('Cannot hire candidate. Must complete all custom stages first.');
+            throw new RuntimeException('Cannot hire candidate. Must complete all custom stages first.');
         }
 
         $pipeline->update([
