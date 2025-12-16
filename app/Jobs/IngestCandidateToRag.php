@@ -1,6 +1,8 @@
 <?php
 
-use App\Candidate\Services\CandidateIngestionService;
+namespace App\Jobs;
+
+use App\Services\Candidate\CandidateIngestionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -12,7 +14,7 @@ class IngestCandidateToRag implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 3;
+    public int $tries = 2;
     public int $timeout = 120;// protect against openAI timeouts
 
     public int $candidateId;

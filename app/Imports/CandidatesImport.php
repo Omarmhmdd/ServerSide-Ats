@@ -2,9 +2,9 @@
 
 namespace App\Imports;
 
+use App\Jobs\IngestCandidateToRag;
 use App\Models\Candidate;
 use App\Models\Pipeline;
-use IngestCandidateToRag;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -30,7 +30,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
         $this->jobRoleId = $jobRoleId;
     }
 
-  public function chunkSize(): int{
+    public function chunkSize(): int{
         return 100; // import 100 rows at a time avoid memory issues for large files
     }
 
@@ -55,21 +55,20 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
 
             $new_candidate->save();
 
-
             $new_pipeline = new Pipeline([
                 'job_role_id' => (int)$this->jobRoleId,
                 'interview_id' => null,
                 'candidate_id' => $new_candidate->id,
-                'global_stages' => 'applied', // Use plural: global_stages
+                'global_stages' => 'applied', 
                 'custom_stage_id' => null, // null when in global stage
             ]);
+            $new_pipeline->save();
 
     
             IngestCandidateToRag::dispatch($new_candidate->id);
             
-
-            $new_pipeline->save();
             return $new_candidate;
+
         }catch(Throwable $e){
             $this->onError($e);
             return null; 

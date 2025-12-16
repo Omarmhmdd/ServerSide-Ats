@@ -12,14 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class JobRoleServices
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-
-    }
-
     static function getLevels(){
         $levels = Level::all('id','name');
         return $levels;
@@ -109,6 +101,66 @@ class JobRoleServices
             return $role;
         });
     }
+
+    public static function getStatistics(int $recruiterId){
+        return DB::select("
+            SELECT j.id,j.title,j.is_remote,j.is_on_sight,COUNT(c.id) AS candidate_count
+            FROM job_roles j
+            LEFT JOIN candidates c 
+                ON c.job_role_id = j.id
+            WHERE j.recruiter_id = ?
+            GROUP BY 
+                j.id,
+                j.title,
+                j.is_remote,
+                j.is_on_sight
+        ", [$recruiterId]);
+    }
+
+    public static function getCandidatesInStages(int $recruiter_id): array{
+       $globalStages = self::getNumberInGlobalStages($recruiter_id);
+       $customStages = self::getNumberInCustomStages($recruiter_id);       
+
+        return self::formatStatisticalReturn($globalStages , $customStages);
+    }
+
+    private static function getNumberInGlobalStages($recruiter_id){
+         return  DB::select("
+            SELECT j.title, p.global_stages, COUNT(p.candidate_id) AS count
+            FROM job_roles j
+            LEFT JOIN pipelines p ON p.job_role_id = j.id
+            WHERE j.recruiter_id = ?
+            GROUP BY j.title, p.global_stages
+        ", [$recruiter_id]);
+    }
+
+    private static function getNumberInCustomStages($recruiter_id){
+        return DB::select("
+            SELECT j.title, cs.name AS custom_stage_name, COUNT(p.candidate_id) AS count
+            FROM job_roles j
+            JOIN pipelines p ON p.job_role_id = j.id
+            JOIN custom_stages cs ON cs.id = p.custom_stage_id
+            WHERE j.recruiter_id = ?
+            GROUP BY j.title, cs.name
+        ", [$recruiter_id]);
+    }
+
+    private static function formatStatisticalReturn($globalStages , $customStages){
+        $formatted = [];
+
+        foreach ($globalStages as $row) {
+            if ($row->global_stages !== null) {
+                $formatted[$row->title][$row->global_stages] = (int) $row->count;
+            }
+        }
+
+        foreach ($customStages as $row) {
+            $formatted[$row->title][$row->custom_stage_name] = (int) $row->count;
+        }
+
+        return $formatted;
+    }
+
 
     private static function saveJobRole($request, $id)
     {

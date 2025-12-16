@@ -7,8 +7,9 @@ use Illuminate\Http\Request;
 use App\Services\CustomStageService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-
-
+use Exception;
+use RuntimeException;
+use Illuminate\Validation\ValidationException;
 class CustomStageController extends Controller
 {
     protected CustomStageService $customStageService;
@@ -26,7 +27,7 @@ class CustomStageController extends Controller
             return $this->successResponse(['stages' => $stages]);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Job role not found', 404);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to fetch stages', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -53,9 +54,9 @@ class CustomStageController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Job role not found', 404);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return $this->errorResponse('Validation failed', 422, ['errors' => $e->errors()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to create custom stage', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -77,9 +78,9 @@ class CustomStageController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Custom stage not found', 404);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return $this->errorResponse('Validation failed', 422, ['errors' => $e->errors()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to update custom stage', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -92,9 +93,9 @@ class CustomStageController extends Controller
             return $this->successResponse([], 'Custom stage deleted successfully');
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Custom stage not found', 404);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             return $this->errorResponse($e->getMessage(), 400);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to delete custom stage', 500, ['error' => $e->getMessage()]);
         }
     }
@@ -116,9 +117,9 @@ class CustomStageController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse('Job role not found', 404);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return $this->errorResponse('Validation failed', 422, ['errors' => $e->errors()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to reorder stages', 500, ['error' => $e->getMessage()]);
         }
     }

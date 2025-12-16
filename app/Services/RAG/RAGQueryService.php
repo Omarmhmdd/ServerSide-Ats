@@ -1,11 +1,11 @@
 <?php
 
-namespace App\RAG\Services;
+namespace App\Services\RAG;
 
 use App\Services\PromptLoaderService;
 use App\Services\RAG\QueryNormalizerService;
 use GuzzleHttp\Client;
-use OpenAI;
+use OpenAI\Laravel\Facades\OpenAI;
 
 class RagQueryService
 {
@@ -28,7 +28,7 @@ class RagQueryService
             'input' => $text,
         ]);
 
-        return $response->data[0]->embedding;
+        return $response->embeddings[0]->embedding;
     }
 
     protected function retrieve(int $candidateId, array $vector, int $limit = 6): array{
@@ -38,6 +38,7 @@ class RagQueryService
                 'json' => [
                     'vector' => $vector,
                     'limit' => $limit,
+                    'with_payload' => true, 
                     'filter' => [
                         'must' => [
                             [
@@ -52,21 +53,18 @@ class RagQueryService
 
         return json_decode($response->getBody(), true)['result'];
     }
+  
     
     protected function buildContext(array $chunks): string{
         $context = '';
 
-        foreach ($chunks as $chunk) {
+        foreach($chunks as $chunk){
             $p = $chunk['payload'];
 
             $context .=
-                "SOURCE: {$p['label']}
-                SECTION: {$p['section']}
-                TEXT:
-                {$p['text']}
-
-                ---
-            ";
+            "SOURCE: " . ($p['source_label'] ?? 'N/A') . "\n" .
+            "SECTION: " . ($p['source_section'] ?? 'General') . "\n" .
+            "TEXT:\n" . ($p['text'] ?? '') . "\n\n---\n";
         }
 
         return $context;
@@ -77,15 +75,14 @@ class RagQueryService
             'model' => env('GPT_MODEL'),
             'messages' => $this->buildMessage($context , $question, $strict)
         ]);
-
         return $response->choices[0]->message->content;
     }
 
     public function answer(int $candidateId, string $question){
-        
+
         $normalizedQuestion = $this->query_normalizer->normalize($question);
         $queryVector = $this->embed($normalizedQuestion);
-        $chunks = $this->retrieve($candidateId, $queryVector);
+        $chunks = $this->retrieve($candidateId, vector: $queryVector);
 
         if (empty($chunks)) {
             return [
@@ -97,6 +94,7 @@ class RagQueryService
         $context = $this->buildContext($chunks);
         $answer = $this->askModel($context, $question , strict:false);
 
+
         if(!$this->validateBulletFormat($answer)){
             // stricter retry
             $answer = $this->askModel($context, $question, strict: true);
@@ -105,7 +103,7 @@ class RagQueryService
         // if it still fails then give up
         if (! $this->validateBulletFormat($answer)) {
             return [
-                'answer' => '- Not found in candidate data
+                'answer' => 'Not found in candidate data
                 Source: N/A',
             ];
         }
@@ -132,6 +130,7 @@ class RagQueryService
             ],
         ];
     }
+
     protected function validateBulletFormat(string $answer): bool{
         // must contain at least one bullet
         if (! preg_match('/^- /m', $answer)) {
