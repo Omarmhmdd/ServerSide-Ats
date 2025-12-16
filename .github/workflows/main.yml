@@ -43,16 +43,12 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            cd /tmp
-            rm -rf ServerSide-Ats-deploy
-            git clone https://${{ secrets.TOKEN }}@github.com/Omarmhmdd/ServerSide-Ats.git ServerSide-Ats-deploy
-            cd ServerSide-Ats-deploy
-            sudo rsync -av --exclude='.git' --exclude='vendor' --exclude='node_modules' --exclude='storage' --exclude='.env' ./ /var/www/ServerSide-Ats/
             cd /var/www/ServerSide-Ats
-            composer install --no-dev --optimize-autoloader
+            git pull origin main
+            composer install --no-dev --optimize-autoloader --no-interaction
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            cd /tmp
-            rm -rf ServerSide-Ats-deploy
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
