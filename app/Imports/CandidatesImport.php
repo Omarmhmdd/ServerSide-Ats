@@ -63,7 +63,7 @@ class CandidatesImport implements ToModel , WithHeadingRow , WithChunkReading
                 'custom_stage_id' => null, // null when in global stage
             ]);
             $new_pipeline->save();
-
+            
     
             IngestCandidateToRag::dispatch($new_candidate->id);
             

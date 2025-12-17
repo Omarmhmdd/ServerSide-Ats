@@ -22,16 +22,16 @@ class OfferForm extends FormRequest
     public function rules(): array
     {
         return [
-            'candidate_id' => 'required|integer|exists:candidates,id',
-            'role_id' => 'required|integer|exists:job_roles,id',
-            'base_salary' => 'required|integer',
-            'equity' => 'required|integer',
-            'bonus' => 'required|integer',
-            'benifits' => 'required|string',
-            'start_date' => 'required|string',
-            'contract_type' => 'required|string',
-            'status' => 'required|string',
-            'expiry_date' => 'required|string',
+            'form.base_salary' => ['required', 'numeric', 'min:0'],
+            'form.equity' => ['required', 'numeric', 'min:0'],
+            'form.bonus' => ['required', 'numeric', 'min:0'],
+            'form.benefits' => ['required', 'string', 'max:5000'],
+            'form.start_date' => ['required', 'date', 'after_or_equal:today'],
+            'form.contract_type' => ['required', 'string', 'max:255'],
+            'form.expiry_date' => ['required', 'date', 'after:form.start_date'],
+            
+            'candidate_id' => ['required', 'integer', 'exists:candidates,id'],
+            'role_id' => ['required', 'integer', 'exists:job_roles,id'],
         ];
     }
 }

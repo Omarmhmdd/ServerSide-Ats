@@ -28,15 +28,14 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::get("/recruiters", [RecruiterController::class,"getRecruiters"]);
         Route::get("/hiring_managers", [HiringManagerController::class,"getHiringManagers"]);
 
-
         // JOB ROLES
         Route::group(["prefix"=>"job_roles"] , function(){
             Route::get("/levels", [JobRoleController::class,"getLevels"]);
-            Route::get("/{id?}", [JobRoleController::class,"getJobRoles"]);
+            Route::get('/getCandidateInEachStage' , [JobRoleController::class , "getCandidateInEachStage"]);
             Route::post("/add_update_job_role", [JobRoleController::class,"addOrUpdateJobRole"]);
             Route::post("/delete_role/{id?}", [JobRoleController::class,"deleteJobRole"]);
             Route::get('/getCandidateInEachRole' , [JobRoleController::class , 'getCandidateCountsInEachRole']);
-            Route::get('/getCandidateInEachStage' , [JobRoleController::class , "getCandidateInEachStage"]);
+            Route::get("/{id?}", [JobRoleController::class,"getJobRoles"]);
         });
         
         // CANDIDATES
@@ -57,8 +56,6 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::group(["prefix" => "copilot"] , function(){
             Route::post("/ask" , [RagCopilotController::class , "ask"]);
         });
-    });
-
 
         // INTERVIEW ROUTES
         Route::prefix("interviews")->group(function () {
@@ -77,16 +74,14 @@ Route::group(["prefix" => "v0.1"], function () {
         Route::prefix("pipelines")->group(function () {
             Route::get("/", [PipelineController::class, "index"]);
             Route::post("/", [PipelineController::class, "store"]);
+            Route::post("/reject/{id}", [PipelineController::class, "reject"])->middleware("role:admin,recruiter");
             Route::get("/{id}", [PipelineController::class, "show"]);
             Route::post("/{id}/update", [PipelineController::class, "update"]);
             Route::post("/{id}/delete", [PipelineController::class, "destroy"]);
             Route::get("/job-role/{jobRoleId}", [PipelineController::class, "getByJobRole"]);
             Route::get("/candidate/{candidateId}", [PipelineController::class, "getByCandidate"]);
             Route::get("/stage/{stageId}", [PipelineController::class, "getByStage"]);
-         //   Route::post("/{id}/move-stage", [PipelineController::class, "moveToStage"]);
-        //    Route::get("/job-role/{jobRoleId}/statistics", [PipelineController::class, "getStatistics"]);
-            Route::post("/{id}/move-next", [PipelineController::class, "moveToNext"])->middleware("role:admin,recruiter");
-            Route::post("/{id}/reject", [PipelineController::class, "reject"])->middleware("role:admin,recruiter");
+            Route::post("/move-next", [PipelineController::class, "moveToNext"])->middleware("role:admin,recruiter");
             Route::post("/{id}/hire", [PipelineController::class, "hire"])->middleware("role:admin,recruiter");
             Route::get("/job-role/{jobRoleId}/statistics", [PipelineController::class, "getStatistics"])->middleware("role:admin,recruiter,interviewer");
             Route::get("/job-role/{jobRoleId}/kanban", [PipelineController::class, "getKanbanBoard"])->middleware("role:admin,recruiter,interviewer");
@@ -103,6 +98,9 @@ Route::group(["prefix" => "v0.1"], function () {
             Route::post("/{id}/update", [CustomStageController::class, "update"])->middleware("role:admin,recruiter");
             Route::post("/{id}/delete", [CustomStageController::class, "destroy"])->middleware("role:admin,recruiter");
         });
+        
+
+    });
 
     // N8N
     Route::group(["prefix" => "n8n"] , function(){

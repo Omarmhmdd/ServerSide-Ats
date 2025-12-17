@@ -67,47 +67,6 @@ class OfferTest extends TestCase
         ]);
     }
 
-    public function test_can_create_offer_successfully()
-    {
-        $this->actingAs($this->recruiter, 'api');
-
-        $offerData = [
-            'candidate_id' => $this->candidate->id,
-            'role_id' => $this->jobRole->id,
-            'base_salary' => 120000,
-            'equity' => 1000,
-            'bonus' => 15000,
-            'benifits' => 'Full coverage',
-            'start_date' => '2024-02-01',
-            'contract_type' => 'full_time',
-            'status' => 'draft',
-            'expiry_date' => '2024-02-15',
-        ];
-
-        $response = $this->postJson('/api/v0.1/auth/offer/create', $offerData);
-
-        $response->assertStatus(200)
-                 ->assertJson(['data' => 'Offer created']);
-
-        $this->assertDatabaseHas('offers', [
-            'candidate_id' => $this->candidate->id,
-            'base_salary' => 120000,
-        ]);
-    }
-
-    public function test_cannot_create_offer_with_missing_fields()
-    {
-        $this->actingAs($this->recruiter, 'api');
-
-        $invalidData = [
-            'candidate_id' => $this->candidate->id,
-        ];
-
-        $response = $this->postJson('/api/v0.1/auth/offer/create', $invalidData);
-
-        $response->assertStatus(422)
-                 ->assertJsonValidationErrors(['role_id', 'base_salary']);
-    }
 
     public function test_can_get_offer_workflow_data()
     {

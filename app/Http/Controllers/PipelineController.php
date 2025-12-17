@@ -130,10 +130,9 @@ class PipelineController extends Controller
         }
     }
 
-     public function moveToNext(int $id): JsonResponse
-    {
+    public function moveToNext(Request $payload): JsonResponse{
         try {
-            $pipeline = $this->pipelineService->moveToNextStage($id);
+            $pipeline = $this->pipelineService->moveToNextStage($payload);
             return $this->successResponse(
                 ['pipeline' => $pipeline],
                 'Candidate moved to next stage successfully'

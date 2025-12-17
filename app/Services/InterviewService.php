@@ -27,13 +27,6 @@ class InterviewService {
 
         $list_of_interviews = self::chooseNextBestSchedule($list_of_emails , $required_ids);
 
-
-        $payload = [
-            "emails" => $list_of_emails,
-            "interviews" => $list_of_interviews
-        ];
-    $url = env('N8N_SEND_EMAIL_ENDPOINT', 'http://localhost:5678/webhook-test/');
-       FacadesHttp::post($url, $payload);
         self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews);
 
         return true;
@@ -174,7 +167,7 @@ class InterviewService {
             "emails" => $list_of_emails,
             "interviews" => $list_of_interviews
         ];
-       FacadesHttp::post("http://localhost:5678/webhook-test/sendEmails" , $payload);
+       FacadesHttp::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
     }
 
 
@@ -450,7 +443,7 @@ class InterviewService {
             'interview_id' => $interview->id,
             'candidate_email' => $interview->candidate->email,
             'interviewer_email' => $interview->interviewer->email,
-            'recruiter_email' => $interview->jobRole->recruiter->em,
+            'recruiter_email' => $interview->jobRole->recruiter->email,
             'interviewer_name' => $interview->interviewer->name,
             'type' => $interview->type,
             'candidate_name' => $interview->candidate->first_name,
@@ -465,7 +458,7 @@ class InterviewService {
     {
         return DB::transaction(function () use ($request) {
 
-            $input = $request->validated();
+            $input = $request->input();
 
             $data_to_save = [
                 'interview_id'              => $input['interview_id'],
