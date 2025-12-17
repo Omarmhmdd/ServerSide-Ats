@@ -18,7 +18,7 @@ class OfferController extends Controller{
         try {
             OfferService::createOffer($offer->validated() , Auth::id());
             return $this->successResponse("Offer created");
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->errorResponse('Failed to create offer', 500, ['error' => $e->getMessage()]);
         }
     }

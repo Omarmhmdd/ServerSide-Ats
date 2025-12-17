@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\CustomStage;
+use App\Models\Interview;
 use App\Models\JobRole;
 use App\Models\Pipeline;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -155,42 +157,42 @@ class PipelineService
     }
 
 
-        public function updatePipeline(int $id, array $data): Pipeline
-        {
-            $pipeline = Pipeline::find($id);
+    public function updatePipeline(int $id, array $data): Pipeline
+    {
+        $pipeline = Pipeline::find($id);
 
-            if (!$pipeline) {
-                throw new ModelNotFoundException('Pipeline entry not found');
+        if (!$pipeline) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
+        // Check access permission
+        if (!$this->canAccessPipeline($pipeline)) {
+            throw new ModelNotFoundException('Pipeline entry not found');
+        }
+
+        // If trying to set stage to 'offer', validate that offer exists
+        if (isset($data['global_stages']) && $data['global_stages'] === 'offer') {
+            $offer = Offer::where('candidate_id', $pipeline->candidate_id)
+                ->where('role_id', $pipeline->job_role_id)
+                ->first();
+            
+            if (!$offer) {
+                throw new RuntimeException('Cannot move to offer stage. Please create an offer first for this candidate and job role.');
             }
-
-            // Check access permission
-            if (!$this->canAccessPipeline($pipeline)) {
-                throw new ModelNotFoundException('Pipeline entry not found');
-            }
-
-            // If trying to set stage to 'offer', validate that offer exists
-            if (isset($data['global_stages']) && $data['global_stages'] === 'offer') {
-                $offer = Offer::where('candidate_id', $pipeline->candidate_id)
-                    ->where('role_id', $pipeline->job_role_id)
-                    ->first();
-                
-                if (!$offer) {
-                    throw new RuntimeException('Cannot move to offer stage. Please create an offer first for this candidate and job role.');
-                }
-                
-                // Trigger n8n workflow after updating to offer stage
-                $pipeline->update($data);
-                $pipeline->load(['jobRole', 'candidate', 'customStage', 'interview']);
-                OfferWorkflowService::handleOfferStage($pipeline);
-                
-                return $pipeline;
-            }
-
+            
+            // Trigger n8n workflow after updating to offer stage
             $pipeline->update($data);
             $pipeline->load(['jobRole', 'candidate', 'customStage', 'interview']);
-
+            OfferWorkflowService::handleOfferStage($pipeline);
+            
             return $pipeline;
         }
+
+        $pipeline->update($data);
+        $pipeline->load(['jobRole', 'candidate', 'customStage', 'interview']);
+
+        return $pipeline;
+    }
 
 
     public function deletePipeline(int $id): bool
@@ -327,10 +329,11 @@ class PipelineService
     }
 
 
-    public function moveToNextStage(int $id): Pipeline
-    {
-        $pipeline = Pipeline::find($id);
-
+    public function moveToNextStage($payload): Pipeline{
+        $pipeline = Pipeline::where("job_role_id", $payload["job_role_id"])
+                                ->where("candidate_id" , $payload["candidate_id"])
+                                ->first();
+                                
         if (!$pipeline) {
             throw new ModelNotFoundException('Pipeline entry not found');
         }
@@ -352,42 +355,67 @@ class PipelineService
                 'custom_stage_id' => null,
             ]);
         }  elseif ($next === 'offer') {
-                    // Check if offer exists before allowing move to offer stage
-                    $offer = \App\Models\Offer::where('candidate_id', $pipeline->candidate_id)
-                        ->where('role_id', $pipeline->job_role_id)
-                        ->first();
-                    
-                    if (!$offer) {
-                        throw new RuntimeException('Cannot move to offer stage. Please create an offer first for this candidate and job role.');
-                    }
-                    
-                    $pipeline->update([
-                        'global_stages' => 'offer',
-                        'custom_stage_id' => null,
-                    ]);
-    
-                //Call offer workflow for n8n to know stage
-                OfferWorkflowService::handleOfferStage($pipeline->fresh());
+            // Check if offer exists before allowing move to offer stage
+            $offer = \App\Models\Offer::where('candidate_id', $pipeline->candidate_id)
+                ->where('role_id', $pipeline->job_role_id)
+                ->first();
+            
+            if (!$offer) {
+                throw new RuntimeException('Cannot move to offer stage. Please create an offer first for this candidate and job role.');
+            }
+            
+            $pipeline->update([
+                'global_stages' => 'offer',
+                'custom_stage_id' => null,
+            ]);
+
+        //Call offer workflow for n8n to know stage
+        OfferWorkflowService::handleOfferStage($pipeline->fresh());
 
         } elseif ($next === 'hired') {
             $pipeline->update([
                 'global_stages' => 'hired',
                 'custom_stage_id' => null,
             ]);
-        } elseif ($next instanceof CustomStage) {
+        } elseif ($next instanceof CustomStage){
             $pipeline->update([
                 'global_stages' => null, // In custom stage
                 'custom_stage_id' => $next->id,
             ]);
+            $interview = self::createInterview($next , $payload , $pipeline);
+            $pipeline->interview_id = $interview->id;
+            $pipeline->save();
         }
 
+
+
         return $pipeline->fresh(['jobRole', 'candidate', 'customStage', 'interview']);
+    }
+
+    private function createInterview($next , $payload , $pipeline){
+        // get old interview
+        $old_interview = Pipeline::with('interview')
+                            ->where('id' , $pipeline->id);
+        $interview = new Interview;
+        $interview->job_role_id = $payload["job_role_id"];
+        $interview->candidate_id = $payload["candidate_id"];
+        $interview->interveiwer_id = $old_interview->interveiwer_id;
+        $interview->type = $next->name;
+        $interview->schedule =  Carbon::now()->addWeek()->setTime(12, 0, 0);
+        $interview->duration = 20;
+        $interview->meeting_link = null;
+        $interview->notes = null;
+        $interview->status = null;
+
+        $interview->save();
+        return $interview;
+
     }
 
 
     public function rejectCandidate(int $id): Pipeline
     {
-        $pipeline = Pipeline::find($id);
+        $pipeline = Pipeline::where('candidate_id' , $id)->first(); 
 
         if (!$pipeline) {
             throw new ModelNotFoundException('Pipeline entry not found');

@@ -40,7 +40,6 @@ class InterviewService {
             "interviews" => $list_of_interviews
         ];
         
-        FacadesHttp::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
         self::moveToScreeningStageInPipeline($list_of_emails , $required_ids , $list_of_interviews);
         
         return true;
@@ -120,7 +119,6 @@ class InterviewService {
 
     private static function createSchedules($list_of_emails , $next_interview_time , $hiring_manager_id , $end_time , $job_role_id){
         $list_of_new_interviews = [];
-        
          foreach ($list_of_emails as $candidate_id => $email) {
             $new_interview = new Interview([
                 'candidate_id'   => $candidate_id,
@@ -172,7 +170,7 @@ class InterviewService {
             "emails" => $list_of_emails,
             "interviews" => $list_of_interviews
         ];
-       FacadesHttp::post("http://localhost:5678/webhook-test/sendEmails" , $payload);
+       FacadesHttp::post(env('N8N_SEND_EMAIL_ENDPOINT') , $payload);
     }
 
     private static function canAccessInterview(Interview $interview): bool
@@ -403,8 +401,7 @@ class InterviewService {
         return $query->latest()->get();
     }
 
-    public static function updateInterviewStatus(int $id, string $status): Interview
-    {
+    public static function updateInterviewStatus(int $id, string $status): Interview{
         $validStatuses = ['no show', 'completed', 'canceled', 'posptponed', 'pending'];
 
         if (!in_array($status, $validStatuses)) {
@@ -428,39 +425,44 @@ class InterviewService {
         return $interview;
     }
 
-    public static function MarkAsComplete($id)
-    {
+  public static function MarkAsComplete($id){
+
+        $interview = self::getInterviewById($id);
         $interview = self::updateInterviewStatus($id,'completed');
 
         $url = "http://localhost:5678/webhook-test/complete_interview";
         FacadesHttp::post($url,[
             'candidate_id' => $interview->candidate_id,
             'interview_id' => $interview->id,
+            'candidate_email' => $interview->candidate->email,
+            'interviewer_email' => $interview->interviewer->email,
+            'recruiter_email' => $interview->jobRole->recruiter->em,
+            'interviewer_name' => $interview->interviewer->name,
+            'type' => $interview->type,
             'candidate_name' => $interview->candidate->first_name,
             'role_title' => $interview->jobRole->title,
             'interview_type' => $interview->type,
             'interview_notes' => $interview->notes,
         ]);
-
-        echo "hi";
         return $interview;
     }
 
     public static function createScoreCard($request)
     {
         return DB::transaction(function () use ($request) {
+
             $input = $request->validated();
 
-            $dataToSave = [
+            $data_to_save = [
                 'interview_id'              => $input['interview_id'],
                 'candidate_id'              => $input['candidate_id'],
                 'criteria'                   => json_encode($input['scorecard']),
                 'summary'                   => $input['summary'],
                 'written_evidence'          => $input['scorecard']['communication']['evidence'] ?? 'See criteria for details',
-                'overall_recommendation_id' => "1",
+                'overall_recommendation' => $input['overall_recommendation'],
             ];
 
-            return self::saveScorecard($dataToSave, 0);
+            return ScorecardServices::saveScorecard($data_to_save, 0);
         });
     }
 

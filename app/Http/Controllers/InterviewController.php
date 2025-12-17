@@ -30,6 +30,15 @@ class InterviewController extends Controller
         }
     }
 
+    public function markAsComplete($interview_id){
+        try{    
+            InterviewService::MarkAsComplete($interview_id);
+            return $this->successResponse("Completed");
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to create scorecard");
+        }
+    }
+
     public function index(): JsonResponse{
         try {
             $interviews = $this->interviewService->getAllInterviews();  // ← Instance call
