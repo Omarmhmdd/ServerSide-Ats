@@ -23,7 +23,6 @@ class OfferWorkflowService
             return;
         }
 
-        // Get existing offer (should already exist, validated before moving to offer stage)
         $offer = Offer::where('candidate_id', $pipeline->candidate_id)
             ->where('role_id', $pipeline->job_role_id)
             ->first();
@@ -37,14 +36,7 @@ class OfferWorkflowService
             return;
         }
         
-        // Trigger n8n workflow
         self::triggerN8nWorkflow($offer->id);
-        
-        Log::info('Offer workflow triggered', [
-            'pipeline_id' => $pipeline->id,
-            'candidate_id' => $pipeline->candidate_id,
-            'offer_id' => $offer->id
-        ]);
         
     } catch (Exception $e) {
         Log::error('Offer workflow failed', [
@@ -88,7 +80,7 @@ class OfferWorkflowService
 
     private static function triggerN8nWorkflow(int $offerId): void
     {
-        $n8nWebhookUrl = env('N8N_WEBHOOK_URL', 'http://localhost:5678/webhook/offer-workflow');
+        $n8nWebhookUrl =  'http://localhost:5678/webhook-test/offer-workflow';
         
         try {
             $response = Http::timeout(10)->post($n8nWebhookUrl, [

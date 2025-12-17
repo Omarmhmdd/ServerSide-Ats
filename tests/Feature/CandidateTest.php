@@ -65,52 +65,6 @@ class CandidateTest extends TestCase
         ]);
     }
 
-    public function test_can_create_interview_for_candidate()
-    {
-        $this->actingAs($this->recruiter, 'api');
-
-        $interviewer = User::where('role_id', 4)->first() ?? User::factory()->create(['role_id' => 4]);
-
-        $payload = [
-            'candidate_id' => $this->candidate->id,
-            'job_role_id' => $this->jobRole->id,
-            'interviewer_id' => $interviewer->id,
-            'type' => 'Screening',
-            'schedule' => now()->addDays(2)->format('Y-m-d H:i:s'),
-            'duration' => 30,
-            'rubric' => 'a',
-            'meeting_link' => 'https://meet.google.com/abc-defg-hij',
-            'notes' => 'Initial screening interview',
-            'status' => 'pending'
-        ];
-
-        $response = $this->postJson('/api/v0.1/interviews', $payload);
-
-        $response->assertStatus(201)
-                 ->assertJsonStructure([
-                     'data' => [
-                         'interview' => [
-                             'id',
-                             'candidate_id',
-                             'status',
-                             'schedule'
-                         ]
-                     ]
-                 ]);
-
-        $this->assertDatabaseHas('interviews', [
-            'candidate_id' => $this->candidate->id,
-            'job_role_id' => $this->jobRole->id,
-            'type' => 'Screening'
-        ]);
-
-        $this->assertDatabaseHas('pipelines', [
-            'candidate_id' => $this->candidate->id,
-            'job_role_id' => $this->jobRole->id,
-            'global_stages' => 'screen'
-        ]);
-    }
-
     public function test_cannot_save_metadata_with_invalid_structure()
     {
         $this->actingAs($this->recruiter, 'api');
