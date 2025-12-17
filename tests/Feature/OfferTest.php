@@ -84,7 +84,6 @@ class OfferTest extends TestCase
             'expiry_date' => '2024-02-15',
         ];
 
-        // Route: Route::post("/create" , ...); inside "auth" -> "offer" prefix
         $response = $this->postJson('/api/v0.1/auth/offer/create', $offerData);
 
         $response->assertStatus(200)
@@ -104,7 +103,6 @@ class OfferTest extends TestCase
             'candidate_id' => $this->candidate->id,
         ];
 
-        // Route: Route::post("/create" , ...); inside "auth" -> "offer" prefix
         $response = $this->postJson('/api/v0.1/auth/offer/create', $invalidData);
 
         $response->assertStatus(422)
@@ -129,7 +127,6 @@ class OfferTest extends TestCase
             'expiry_date' => '2024-02-01',
         ]);
 
-        // Route: Route::get("/offers/{offer_id}/workflow-data", ...); inside "n8n" prefix
         $response = $this->getJson("/api/v0.1/n8n/offers/{$offer->id}/workflow-data");
 
         $response->assertStatus(200)
@@ -168,7 +165,6 @@ class OfferTest extends TestCase
             'expiry_date' => '2024-02-01',
         ]);
 
-        // Route: Route::get("/pipelines/{pipeline_id}/offer", ...); inside "n8n" prefix
         $response = $this->getJson("/api/v0.1/n8n/pipelines/{$pipeline->id}/offer");
 
         $response->assertStatus(200)
@@ -186,7 +182,6 @@ class OfferTest extends TestCase
 
         $nonExistentId = 99999;
 
-        // Route: Route::get("/offers/{offer_id}/workflow-data", ...); inside "n8n" prefix
         $response = $this->getJson("/api/v0.1/n8n/offers/{$nonExistentId}/workflow-data");
 
         $response->assertStatus(404);
