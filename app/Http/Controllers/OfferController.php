@@ -9,8 +9,9 @@ use App\Models\Pipeline;
 use Exception;
 use App\Http\Requests\OfferForm;
 use App\Services\OfferService;
-use Auth;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OfferController extends Controller{
 
@@ -22,7 +23,7 @@ class OfferController extends Controller{
             return $this->errorResponse('Failed to create offer', 500, ['error' => $e->getMessage()]);
         }
     }
-    
+
     public function getWorkflowData(int $offerId): JsonResponse
     {
         try {
@@ -103,15 +104,15 @@ class OfferController extends Controller{
     {
         try {
             $pipeline = Pipeline::with(['candidate', 'jobRole'])->findOrFail($pipelineId);
-            
+
             $offer = Offer::where('candidate_id', $pipeline->candidate_id)
                 ->where('role_id', $pipeline->job_role_id)
                 ->first();
-            
+
             if (!$offer) {
                 return $this->errorResponse('No offer found for this pipeline', 404);
             }
-            
+
             return $this->successResponse([
                 'pipeline_id' => $pipelineId,
                 'offer_id' => $offer->id,

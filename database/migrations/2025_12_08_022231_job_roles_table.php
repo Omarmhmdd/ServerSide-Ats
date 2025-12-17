@@ -14,7 +14,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('recruiter_id');
             $table->bigInteger('level_id');
-            $table->bigInteger('hiring_manager_id');
+            $table->bigInteger('interviewer_id');
             $table->string('location');
             $table->string('title');
             $table->text('description');

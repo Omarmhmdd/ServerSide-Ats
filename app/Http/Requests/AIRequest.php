@@ -22,10 +22,11 @@ class AIRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'interview_id' => 'required|integer', 
+            'interview_id' => 'required|integer',
             'candidate_id' => 'required|integer',
             'summary' => 'required|string',
             'scorecard' => 'required|',
+            'overall_recommendation' => 'required|string',
         ];
     }
 }

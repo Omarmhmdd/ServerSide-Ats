@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services;
-
+///////////
 use App\Models\Pipeline;
 use App\Models\Offer;
 use Illuminate\Support\Facades\Http;
