@@ -395,11 +395,12 @@ class PipelineService
     private function createInterview($next , $payload , $pipeline){
         // get old interview
         $old_interview = Pipeline::with('interview')
-                            ->where('id' , $pipeline->id);
+                            ->where('id' , $pipeline->id)
+                            ->first();
         $interview = new Interview;
         $interview->job_role_id = $payload["job_role_id"];
         $interview->candidate_id = $payload["candidate_id"];
-        $interview->interveiwer_id = $old_interview->interveiwer_id;
+        $interview->interviewer_id = $old_interview->interviewer_id;
         $interview->type = $next->name;
         $interview->schedule =  Carbon::now()->addWeek()->setTime(12, 0, 0);
         $interview->duration = 20;

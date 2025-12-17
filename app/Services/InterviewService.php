@@ -443,7 +443,7 @@ class InterviewService {
             'interview_id' => $interview->id,
             'candidate_email' => $interview->candidate->email,
             'interviewer_email' => $interview->interviewer->email,
-            'recruiter_email' => $interview->jobRole->recruiter->em,
+            'recruiter_email' => $interview->jobRole->recruiter->email,
             'interviewer_name' => $interview->interviewer->name,
             'type' => $interview->type,
             'candidate_name' => $interview->candidate->first_name,
@@ -458,7 +458,7 @@ class InterviewService {
     {
         return DB::transaction(function () use ($request) {
 
-            $input = $request->validated();
+            $input = $request->input();
 
             $data_to_save = [
                 'interview_id'              => $input['interview_id'],

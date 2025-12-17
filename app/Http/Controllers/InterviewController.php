@@ -39,6 +39,15 @@ class InterviewController extends Controller
         }
     }
 
+    public function createScoreCard(Request $req){
+        try{
+           InterviewService::createScoreCard($req);
+           return $this->successResponse("Created Score card");
+        }catch(Exception $ex){
+            return $this->errorResponse("Failed to create scorecard" . $ex->getMessage());
+        }
+    }
+
     public function index(): JsonResponse{
         try {
             $interviews = $this->interviewService->getAllInterviews();  // ← Instance call
